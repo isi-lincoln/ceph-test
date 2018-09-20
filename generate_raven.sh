@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [[ $EUID -ne 0 ]]; then
    echo "rvn requires root access - please sudo"
    exit 1
@@ -32,3 +33,7 @@ echo "$ceph2" >> raven
 echo "" >> raven
 echo "[admin]" >> raven
 echo "$admin" >> raven
+echo "" >> raven
+echo "[local]" >> raven
+echo "localhost" >> raven
+

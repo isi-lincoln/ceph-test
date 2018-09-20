@@ -1,0 +1,5 @@
+- name: Set authorized key took from file
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '/home/charlie/.ssh/id_rsa.pub') }}"

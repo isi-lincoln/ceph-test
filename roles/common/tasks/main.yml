@@ -1,0 +1,2 @@
+- name: update ubuntu hosts
+  import_tasks: update_ubuntu.yml
