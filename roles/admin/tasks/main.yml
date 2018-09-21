@@ -1,2 +1,5 @@
 - name: install ceph packages
   import_tasks: install_ceph.yml
+
+- name: deploy ceph cluster
+  import_tasks: deploy_ceph.yml
