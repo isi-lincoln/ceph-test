@@ -29,4 +29,43 @@
     src: roles/common/files/keys/ceph_admin
     dest: /home/ceph-admin/.ssh/id_rsa
     owner: ceph-admin
-    mode: 0700
+    group: ceph-admin
+    mode: 0600
+
+- name: copying over public key to ceph-admin
+  copy:
+    src: roles/common/files/keys/ceph_admin.pub
+    dest: /home/ceph-admin/.ssh/id_rsa.pub
+    owner: ceph-admin
+    group: ceph-admin
+    mode: 0644
+
+- name: copy host file to admin server
+  template:
+    src: roles/admin/templates/hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+
+- name: copy ssh config file to admin server
+  template:
+    src: roles/admin/templates/config.j2
+    dest: /home/ceph-admin/.ssh/config
+    owner: ceph-admin
+    group: ceph-admin
+    mode: 0644
+
+- name: flush iptable rules
+  iptables:
+    flush: yes
+
+- name: add ceph iptable rule
+  iptables:
+    chain: INPUT
+    in_interface: eth1
+    protocol: tcp
+    source: 10.0.0.0/24
+    destination_port: 6789
+    jump: ACCEPT
+  become: yes

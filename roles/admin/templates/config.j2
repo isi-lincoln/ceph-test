@@ -1,0 +1,6 @@
+{% for minion in groups['deploy'] %}
+Host {{ hostvars[minion]['ansible_hostname'] }}
+  Hostname {{ hostvars[minion]['ansible_hostname'] }}
+  User ceph-worker
+  IdentityFile ~/.ssh/id_rsa
+{% endfor %}

@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  gather_facts: yes
+  tasks:
+    #- debug: var=ansible_all_ipv4_addresses
+    - set_fact:
+        ceph_ip: "{{ item }}"
+      with_items: "{{ ansible_all_ipv4_addresses }}"
+      when: "item.startswith('10.0.0')"
+    - debug: var=ceph_ip

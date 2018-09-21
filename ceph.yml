@@ -1,4 +1,4 @@
 ---
-
+- import_playbook: precheck.yml
 - import_playbook: cephdeploy.yml
 - import_playbook: cephadmin.yml
