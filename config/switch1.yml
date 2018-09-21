@@ -1,0 +1,14 @@
+# configure our cumulus linux host as a switch
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: configure interface file
+      copy:
+        src: ./switch1.conf
+        dest: /etc/network/interfaces
+        remote_src: no
+
+    - name: reload interfaces
+      shell: ifreload -a

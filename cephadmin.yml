@@ -2,3 +2,4 @@
 - hosts: admin
   roles:
     - common
+    - admin

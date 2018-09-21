@@ -1,6 +1,6 @@
 
 cephs = {
-    node: Range(3).map(i => Client('ceph'+i))
+    node: Range(4).map(i => Client('ceph'+i))
 }
 
 switch1 = {
@@ -29,7 +29,9 @@ topo = {
   switches: [switch1],
   links: [
     ...cephs.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
-    Link('server', 0, 'switch1', ports.switch1++)
+    ...cephs.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
+    Link('server', 0, 'switch1', ports.switch1++),
+    Link('server', 1, 'switch1', ports.switch1++)
   ]
 }
 

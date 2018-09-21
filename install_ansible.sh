@@ -18,19 +18,24 @@ else
     exit 1
 fi
 
-hosts=('server' 'ceph0' 'ceph1' 'ceph2')
-ansible_cmd="sudo apt-get -q update && sudo apt-get install -qqy ansible"
+hosts=('server' 'ceph0' 'ceph1' 'ceph2' 'ceph3')
+ansible_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null && sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
 create_dir="sudo mkdir -p /root/.ssh/"
 chmod_dir="sudo chmod 700 /root/.ssh/"
-pubkey=$(cat keys/ceph_key.pub)
+pubkey=$(cat roles/common/files/keys/ansible_key.pub)
 add_key="sudo bash -c 'echo $pubkey >> /root/.ssh/authorized_keys'"
 
 for i in "${hosts[@]}"
 do
     host=$(rvn ssh $i)
     # install ansible
+    echo "~~~~~~~~~~~~~~"
+    eval $(printf "%s \"%s\"" "$host" "hostname")
+    echo "~~~~~~~~~~~~~~"
+    echo "* Installing Ansible"
     eval $(printf "%s \"%s\"" "$host" "$ansible_cmd")
     # install public key for ansible as root
+    echo "* Adding Public Keys"
     eval $(printf "%s \"%s\"" "$host" "$create_dir")
     eval $(printf "%s \"%s\"" "$host" "$chmod_dir")
     eval $(printf "%s \"%s\"" "$host" "$add_key")

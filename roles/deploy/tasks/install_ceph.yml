@@ -1,0 +1,42 @@
+---
+
+- name: Install ceph key
+  apt_key:
+    url: https://download.ceph.com/keys/release.asc
+    state: present
+
+- name: Install ceph-deploy
+  apt:
+    name: "ceph-deploy"
+    state: latest
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name=wheel
+    state=present
+
+- name: Allow wheel group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+
+- name: Create ceph-deploy user
+  user:
+    name: ceph-worker
+    comment: Ceph Deploy Worker
+    create_home: yes
+    groups: wheel
+    append: yes
+    generate_ssh_key: yes
+    ssh_key_bits: 1024
+    ssh_key_file: .ssh/id_rsa
+    state: present
+
+- name: copying over public key to ceph-deploy
+  copy:
+    src: roles/common/files/keys/ceph_admin.pub
+    dest: /home/ceph-worker/.ssh/authorized_keys
+    owner: ceph-worker
+    mode: 0644

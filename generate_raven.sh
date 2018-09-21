@@ -22,18 +22,20 @@ admin=$(rvn ip server)
 ceph0=$(rvn ip ceph0)
 ceph1=$(rvn ip ceph1)
 ceph2=$(rvn ip ceph2)
+ceph3=$(rvn ip ceph3)
 
-echo "" > raven
-echo "# auto generated file: raven" >> raven
-echo "" >> raven
-echo "[deploy]" >> raven
-echo "$ceph0" >> raven
-echo "$ceph1" >> raven
-echo "$ceph2" >> raven
-echo "" >> raven
-echo "[admin]" >> raven
-echo "$admin" >> raven
-echo "" >> raven
-echo "[local]" >> raven
-echo "localhost" >> raven
+cat > raven << EOF
+# auto generated file: raven
 
+[deploy]
+$ceph0 hostname=ceph0
+$ceph1 hostname=ceph1
+$ceph2 hostname=ceph2
+$ceph3 hostname=ceph3
+
+[admin]
+$admin hostname=server
+
+[all:vars]
+ansible_ssh_private_key_file=roles/common/files/keys/ansible_key
+EOF

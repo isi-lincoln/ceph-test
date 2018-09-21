@@ -1,0 +1,16 @@
+---
+- hosts: all
+  become: true
+  
+  tasks:
+    - name: set ip address
+      command: "{{item}}"
+      with_items:
+        - ip link set eth1 down
+        - ip addr add 10.0.0.13/24 dev eth1
+        - ip link set eth1 up
+      ignore_errors: no
+
+    - name: set hostname
+      hostname:
+        name: ceph3
