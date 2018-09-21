@@ -1,5 +1,15 @@
 ---
 
+- name: Install ceph key
+  apt_key:
+    url: https://download.ceph.com/keys/release.asc
+    state: present
+
+- name: Install ceph-deploy
+  apt:
+    name: "ceph-deploy"
+    state: latest
+
 - name: Make sure we have a 'wheel' group
   group:
     name=wheel
@@ -69,3 +79,25 @@
     destination_port: 6789
     jump: ACCEPT
   become: yes
+
+- name: create known_hosts file
+  copy:
+    content: ""
+    dest: /home/ceph-admin/.ssh/known_hosts
+    force: yes
+    owner: ceph-admin
+    group: ceph-admin
+    mode: 0644
+
+- name: run ssh-keyscan to add keys to known_hosts
+  command: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }}"
+  with_items: "{{ groups['deploy'] }}"
+  register: test
+
+- name: write ssh to known_hosts
+  lineinfile:
+    dest: /home/ceph-admin/.ssh/known_hosts
+    line: "{{ item.stdout }}"
+    insertafter: EOF
+  with_items: "{{ test.results }}"
+
