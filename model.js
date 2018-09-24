@@ -41,5 +41,12 @@ function Client(nameIn) {
       image: 'ubuntu-1604',
       cpu: { cores: 2 },
       memory: { capacity: GB(4) },
+      disks: [
+        {
+          source: env.PWD + "/" + nameIn,
+          dev: "vdb",
+          bus: "virtio",
+        },
+      ],
     };
 }

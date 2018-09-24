@@ -80,7 +80,7 @@
     jump: ACCEPT
   become: yes
 
-- name: create known_hosts file
+- name: create & wipe contents of known_hosts file
   copy:
     content: ""
     dest: /home/ceph-admin/.ssh/known_hosts
@@ -89,15 +89,18 @@
     group: ceph-admin
     mode: 0644
 
-- name: run ssh-keyscan to add keys to known_hosts
-  command: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }}"
+- name: run ssh-keyscan to add keys to known_hosts for eth0
+  shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /home/ceph-admin/.ssh/known_hosts"
   with_items: "{{ groups['deploy'] }}"
-  register: test
 
-- name: write ssh to known_hosts
-  lineinfile:
-    dest: /home/ceph-admin/.ssh/known_hosts
-    line: "{{ item.stdout }}"
-    insertafter: EOF
-  with_items: "{{ test.results }}"
+# this requires the precheck.yml to configure ceph_ip eth1 interfaces for ansible variable
+- name: run ssh-keyscan to add keys to known_hosts for eth1
+  shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-admin/.ssh/known_hosts"
+  with_items: "{{ groups['deploy'] }}"
 
+#- name: write ssh to known_hosts
+#lineinfile:
+#  dest: /home/ceph-admin/.ssh/known_hosts
+#  line: "{{ item.stdout }}"
+#  insertafter: EOF
+#with_items: "{{ test.results }}"

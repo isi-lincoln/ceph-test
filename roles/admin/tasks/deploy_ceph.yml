@@ -1,0 +1,101 @@
+---
+
+- name: Make ceph directory
+  file:
+    path: /home/ceph-admin/ceph-dir/
+    owner: ceph-admin
+    group: ceph-admin
+    state: directory
+    mode: 0775
+
+- find:
+    paths: /home/ceph-admin/ceph-dir/
+    patterns: "*.*"
+  register: files_to_delete
+
+- name: Delete all files in ceph directory
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+
+- name: Ceph Purge Nodes
+  command: "ceph-deploy purge {{ hostvars[item]['ansible_hostname'] }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+
+- name: Ceph Purge Data
+  command: "ceph-deploy purgedata {{ hostvars[item]['ansible_hostname'] }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+
+- name: Ceph Forget Keys
+  command: "ceph-deploy forgetkeys"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  become: yes
+  become_user: ceph-admin
+
+
+- name: Make configuration directory
+  file:
+    path: /etc/ceph/
+    owner: root
+    group: root
+    state: directory
+    mode: 0775
+
+# We need to crete a configuration file for each ceph node
+# http://docs.ceph.com/docs/giant/rados/configuration/ceph-conf/
+- name: copy ceph configuration template to each node
+  template:
+    src: roles/common/templates/ceph.j2
+    dest: /etc/ceph/ceph.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Create Ceph Nodes
+  command: "ceph-deploy new {{ hostvars[item]['ansible_hostname'] }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+
+- name: Install Ceph Node Packages
+  command: "ceph-deploy install {{ hostvars[item]['ansible_hostname'] }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+
+- name: Create Ceph Monitor
+  command: "ceph-deploy mon create-initial"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  become: yes
+  become_user: ceph-admin
+
+- name: Copy admin configuration/files to Nodes
+  command: "ceph-deploy admin {{ hostvars[item]['ansible_hostname'] }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+
+- name: Copy admin configuration/files to Nodes
+  command: "ceph-deploy osd create --zap-disk --fs-type ext4 {{ item }}:/dev/vdb"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin

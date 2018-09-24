@@ -19,7 +19,8 @@ else
 fi
 
 hosts=('server' 'ceph0' 'ceph1' 'ceph2' 'ceph3')
-ansible_cmd="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null && sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
+ansible_cmd1="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null"
+ansible_cmd2="sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
 create_dir="sudo mkdir -p /root/.ssh/"
 chmod_dir="sudo chmod 700 /root/.ssh/"
 pubkey=$(cat roles/common/files/keys/ansible_key.pub)
@@ -33,7 +34,8 @@ do
     eval $(printf "%s \"%s\"" "$host" "hostname")
     echo "~~~~~~~~~~~~~~"
     echo "* Installing Ansible"
-    eval $(printf "%s \"%s\"" "$host" "$ansible_cmd")
+    eval $(printf "%s \"%s\"" "$host" "$ansible_cmd1")
+    eval $(printf "%s \"%s\"" "$host" "$ansible_cmd2")
     # install public key for ansible as root
     echo "* Adding Public Keys"
     eval $(printf "%s \"%s\"" "$host" "$create_dir")
