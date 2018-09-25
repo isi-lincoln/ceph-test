@@ -43,7 +43,7 @@ function Client(nameIn) {
       memory: { capacity: GB(4) },
       disks: [
         {
-          source: env.PWD + "/" + nameIn,
+          source: env.PWD + "/storage/" + nameIn,
           dev: "vdb",
           bus: "virtio",
         },

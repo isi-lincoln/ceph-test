@@ -4,6 +4,7 @@ Built for a standalone environment to test building a ceph deployment using [rav
 
 ## Building
 
+0. `./generate_disks`  # build osds - Requires 80GB of storage
 1. `rvn build`  # build the raven topology
 2. `rvn deploy`  # deploy libvirt instances
 3. `rvn pingwait server`  # wait until server is reachable
