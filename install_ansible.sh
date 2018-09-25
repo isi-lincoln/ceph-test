@@ -21,24 +21,44 @@ fi
 hosts=('server' 'ceph0' 'ceph1' 'ceph2' 'ceph3')
 ansible_cmd1="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null"
 ansible_cmd2="sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
+death_to_apt='sudo kill -9 \`ps aux | grep apt | grep -v lock | grep -v grep | sed \"s/\s\+/ /g\" | cut -d \" \" -f 2\`'
 create_dir="sudo mkdir -p /root/.ssh/"
 chmod_dir="sudo chmod 700 /root/.ssh/"
 pubkey=$(cat roles/common/files/keys/ansible_key.pub)
 add_key="sudo bash -c 'echo $pubkey >> /root/.ssh/authorized_keys'"
+timer=1
+
+prep_host () {
+    # install ansible
+    echo "$2: * Killing all the Apt Stuff"
+    # kill update.daily
+    eval $(printf "%s \"%s\"" "$1" "$death_to_apt")
+    sleep $timer
+    # kill install
+    eval $(printf "%s \"%s\"" "$1" "$death_to_apt")
+}
+
+do_install () {
+    echo "$2: * Installing Ansible"
+    eval $(printf "%s \"%s\"" "$1" "$ansible_cmd1")
+    eval $(printf "%s \"%s\"" "$1" "$ansible_cmd2")
+    # install public key for ansible as root
+    echo "$2: * Adding Public Keys"
+    eval $(printf "%s \"%s\"" "$1" "$create_dir")
+    eval $(printf "%s \"%s\"" "$1" "$chmod_dir")
+    eval $(printf "%s \"%s\"" "$1" "$add_key")
+}
 
 for i in "${hosts[@]}"
 do
-    host=$(rvn ssh $i)
-    # install ansible
-    echo "~~~~~~~~~~~~~~"
-    eval $(printf "%s \"%s\"" "$host" "hostname")
-    echo "~~~~~~~~~~~~~~"
-    echo "* Installing Ansible"
-    eval $(printf "%s \"%s\"" "$host" "$ansible_cmd1")
-    eval $(printf "%s \"%s\"" "$host" "$ansible_cmd2")
-    # install public key for ansible as root
-    echo "* Adding Public Keys"
-    eval $(printf "%s \"%s\"" "$host" "$create_dir")
-    eval $(printf "%s \"%s\"" "$host" "$chmod_dir")
-    eval $(printf "%s \"%s\"" "$host" "$add_key")
+	host=$(rvn ssh $i)
+	prep_host "${host}" $i &
+done
+
+sleep $timer
+
+for i in "${hosts[@]}"
+do
+	host=$(rvn ssh $i)
+	do_install "${host}" $i
 done

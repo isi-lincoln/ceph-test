@@ -92,8 +92,8 @@
   become: yes
   become_user: ceph-admin
 
-- name: Copy admin configuration/files to Nodes
-  command: "ceph-deploy osd create --zap-disk --fs-type ext4 {{ item }}:/dev/vdb"
+- name: Create OSDs - this will take a while...
+  command: "ceph-deploy osd create --zap-disk --fs-type ext4 {{ hostvars[item]['ceph_ip'] }}:/dev/vdb"
   args:
     chdir: /home/ceph-admin/ceph-dir/
   with_items: "{{ groups['deploy'] }}"
