@@ -1,0 +1,17 @@
+---
+
+- name: Test Cluster Health
+  command: "ssh {{ hostvars[item]['ansible_hostname'] }} sudo ceph health"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+  register: clusterHealth
+  failed_when: clusterHealth.stdout != "HEALTH_OK"
+  tags:
+    - debug
+
+#- debug: var=clusterHealth.stdout
+#  tags:
+#    - debug

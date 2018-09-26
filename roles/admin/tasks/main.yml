@@ -3,3 +3,6 @@
 
 - name: deploy ceph cluster
   import_tasks: deploy_ceph.yml
+
+- name: test ceph cluster
+  import_tasks: test_ceph.yml

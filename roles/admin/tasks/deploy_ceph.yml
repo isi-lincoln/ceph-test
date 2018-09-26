@@ -42,7 +42,6 @@
   become: yes
   become_user: ceph-admin
 
-
 - name: Make configuration directory
   file:
     path: /etc/ceph/
@@ -93,9 +92,42 @@
   become_user: ceph-admin
 
 - name: Create OSDs - this will take a while...
-  command: "ceph-deploy osd create --zap-disk --fs-type ext4 {{ hostvars[item]['ansible_hostname'] }}:/dev/vdb"
+  command: "ceph-deploy osd create --zap-disk --fs-type xfs {{ hostvars[item]['ansible_hostname'] }}:/dev/vdb"
   args:
     chdir: /home/ceph-admin/ceph-dir/
   with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-admin
+
+# we dont need a meta data server on every node.
+- name: Create Metadata Server
+  command: "ceph-deploy mds create {{ item }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items:
+    - "ceph0"
+    - "ceph2"
+  become: yes
+  become_user: ceph-admin
+
+# check quorum with `ceph quorum_status --format json-pretty` on cephX nodes
+- name: Create a ceph monitors (3 for HA)
+  command: "ceph-deploy mon add {{ item }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items:
+    - "ceph0"
+    - "ceph1"
+    - "ceph2"
+  become: yes
+  become_user: ceph-admin
+
+# Add Object Gateway, default web interface on 7480
+- name: Create a RGW
+  command: "ceph-deploy rgw create {{ item }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items:
+    - "ceph1"
   become: yes
   become_user: ceph-admin
