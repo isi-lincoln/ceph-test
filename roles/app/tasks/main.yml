@@ -1,2 +1,5 @@
-- name: configure client ceph
+- name: configure client ceph (rados)
   import_tasks: client_rbd_instance.yml
+
+- name: configure client ceph (cephfs)
+  import_tasks: client_fs_instance.yml

@@ -1,0 +1,61 @@
+---
+
+- name: install ceph filesystem packages
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - ceph-fs-common
+      - ceph-fuse
+
+- name: create pool list name
+  set_fact:
+    ceph_fs_pools:
+      - "cephfs-data"
+      - "cephfs-metadata"
+
+# placement group calculation: http://docs.ceph.com/docs/jewel/rados/operations/placement-groups/#preselection
+- name: create pools for filesystem
+  command: "ceph osd pool create {{ item }} 128 replicated"
+  with_items: "{{ ceph_fs_pools }}"
+  become_user: ceph-client
+
+- name: create filesystem using pools
+  command: "ceph fs new test_filesystem {{ item }}"
+  with_items:
+    - "{{ ceph_fs_pools | join(' ') }}"
+  become_user: ceph-client
+
+- name: create filesystem mount point
+  file:
+    path: /mnt/cephfs/
+    owner: root
+    group: root
+    state: directory
+    mode: 0775
+
+- name: get monitors
+  shell: ceph mon dump 2>&1 | grep "mon\." | cut -d " " -f 2 | cut -d "/" -f 1
+  register: get_mons
+
+- name: get secret token
+  shell: cat /etc/ceph/ceph.client.admin.keyring | tail -n1 | sed 's/ //g' | cut -d "=" -f 2-
+  register: secret
+
+- name: create secret token file
+  file:
+    path: /etc/ceph/secret
+    mode: 0700
+    owner: root
+    group: root
+    state: touch
+
+- name: copy secret
+  copy:
+    dest: /etc/ceph/secret
+    content: "{{ secret.stdout }}"
+
+- name: create filesystem using pools
+  command: "sudo mount -t ceph {{ get_mons.stdout_lines[0] }}:/ /mnt/cephfs -o name=admin,secretfile=/etc/ceph/secret"
+  become_user: ceph-client
+  become: yes

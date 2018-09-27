@@ -55,6 +55,12 @@
     jump: ACCEPT
   become: yes
 
+# in case we've mounted a disk
+- name: make sure we dont have any ceph mounting things
+  command: umount -af
+  become: yes
+  ignore_errors: yes
+
 # remove all the rbd blocks
 - name: find all rdb images
   command: rbd ls
@@ -63,12 +69,6 @@
 - name: unmap all the rados blocks
   command: "rbd unmap {{ item }}"
   with_items: "{{ rbdls.stdout_lines }}"
-  ignore_errors: yes
-
-# in case we've mounted a disk
-- name: make sure we dont have any ceph mounting things
-  command: umount -af
-  become: yes
   ignore_errors: yes
 
 - name: delete all previous ceph images
