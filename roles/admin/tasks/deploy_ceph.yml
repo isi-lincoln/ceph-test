@@ -23,7 +23,7 @@
   command: "ceph-deploy purge {{ hostvars[item]['ansible_hostname'] }}"
   args:
     chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
+  with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
 
@@ -31,7 +31,7 @@
   command: "ceph-deploy purgedata {{ hostvars[item]['ansible_hostname'] }}"
   args:
     chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
+  with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
 
@@ -72,7 +72,7 @@
   command: "ceph-deploy install {{ hostvars[item]['ansible_hostname'] }}"
   args:
     chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
+  with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
 
@@ -87,7 +87,7 @@
   command: "ceph-deploy admin {{ hostvars[item]['ansible_hostname'] }}"
   args:
     chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
+  with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
 

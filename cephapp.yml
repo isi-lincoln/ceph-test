@@ -1,0 +1,4 @@
+---
+- hosts: clients
+  roles:
+    - app

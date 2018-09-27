@@ -18,7 +18,7 @@ else
     exit 1
 fi
 
-hosts=('server' 'ceph0' 'ceph1' 'ceph2' 'ceph3')
+hosts=('server' 'client' 'ceph0' 'ceph1' 'ceph2' 'ceph3')
 ansible_cmd1="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null"
 ansible_cmd2="sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
 death_to_apt='sudo kill -9 \`ps aux | grep apt | grep -v lock | grep -v grep | sed \"s/\s\+/ /g\" | cut -d \" \" -f 2\`'

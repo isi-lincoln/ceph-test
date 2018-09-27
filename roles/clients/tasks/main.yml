@@ -1,0 +1,2 @@
+- name: install ceph packages
+  import_tasks: install_ceph.yml

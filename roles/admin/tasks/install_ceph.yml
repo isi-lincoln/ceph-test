@@ -91,12 +91,12 @@
 
 - name: run ssh-keyscan to add keys to known_hosts for eth0
   shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /home/ceph-admin/.ssh/known_hosts"
-  with_items: "{{ groups['deploy'] }}"
+  with_items: "{{ groups['nodes'] }}"
 
 # this requires the precheck.yml to configure ceph_ip eth1 interfaces for ansible variable
 - name: run ssh-keyscan to add keys to known_hosts for eth1
   shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-admin/.ssh/known_hosts"
-  with_items: "{{ groups['deploy'] }}"
+  with_items: "{{ groups['nodes'] }}"
 
 #- name: write ssh to known_hosts
 #lineinfile:

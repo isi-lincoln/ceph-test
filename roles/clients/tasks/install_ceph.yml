@@ -1,0 +1,76 @@
+---
+
+- name: Install ceph key
+  apt_key:
+    url: https://download.ceph.com/keys/release.asc
+    state: present
+
+- name: Install ceph-deploy
+  apt:
+    name: "ceph-deploy"
+    state: latest
+
+- name: Make sure we have a 'wheel' group
+  group:
+    name=wheel
+    state=present
+
+- name: Allow wheel group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+
+- name: Create ceph-client user
+  user:
+    name: ceph-client
+    comment: Ceph Client
+    create_home: yes
+    groups: wheel
+    append: yes
+    generate_ssh_key: yes
+    ssh_key_bits: 1024
+    ssh_key_file: .ssh/id_rsa
+    state: present
+
+- name: copying over public key to ceph-client
+  copy:
+    src: roles/common/files/keys/ceph_admin.pub
+    dest: /home/ceph-client/.ssh/authorized_keys
+    owner: ceph-client
+    mode: 0644
+
+- name: flush iptable rules
+  iptables:
+    flush: yes
+
+- name: add ceph iptable rule
+  iptables:
+    chain: INPUT
+    in_interface: eth1
+    protocol: tcp
+    source: 10.0.0.0/24
+    destination_port: 6789
+    jump: ACCEPT
+  become: yes
+
+# remove all the rbd blocks
+- name: find all rdb images
+  command: rbd ls
+  register: rbdls
+
+- name: unmap all the rados blocks
+  command: "rbd unmap {{ item }}"
+  with_items: "{{ rbdls.stdout_lines }}"
+  ignore_errors: yes
+
+# in case we've mounted a disk
+- name: make sure we dont have any ceph mounting things
+  command: umount -af
+  become: yes
+  ignore_errors: yes
+
+- name: delete all previous ceph images
+  command: "rbd remove {{ item }}"
+  with_items: "{{ rbdls.stdout_lines }}"

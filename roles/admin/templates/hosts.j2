@@ -1,6 +1,6 @@
 127.0.0.1 localhost
 # Jinja added ansible hosts for ceph cluster
-{% for minion in groups['deploy'] %}
+{% for minion in groups['nodes'] %}
 {{ hostvars[minion]['ceph_ip'] }} {{ hostvars[minion]['ansible_hostname'] }}
 {% endfor %}
 

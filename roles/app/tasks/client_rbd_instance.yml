@@ -1,0 +1,51 @@
+---
+- name: checking
+  command: hostname
+  register: check
+
+- debug: var=check.stdout
+
+- name: chmod the keyring
+  file:
+    path: /etc/ceph/ceph.client.admin.keyring
+    owner: root
+    group: root
+    mode: 0755
+
+# seems only issue for libvirt instances?
+- name: change ceph rados laying
+  lineinfile:
+    path: /etc/ceph/ceph.conf
+    line: 'rbd default features = 3'
+
+- name: create a 4G Rados block image
+  command: rbd create foo --size 4096 -k /etc/ceph/ceph.client.admin.keyring
+  become: yes
+  become_user: ceph-client
+
+- name: modprobe kernel module
+  modprobe:
+    name: rbd
+    state: present
+
+- name: create map for rados resource
+  command: sudo rbd map foo --pool rbd --name client.admin -k /etc/ceph/ceph.client.admin.keyring
+  become: yes
+  become_user: ceph-client
+
+- name: parition filesystem
+  filesystem:
+    fstype: ext4
+    dev: /dev/rbd/rbd/foo
+    opts: -m0
+
+- name: Make directory to use for mounting filesystem
+  file:
+    path: /mnt/ceph-block-device
+    state: directory
+    mode: 0755
+
+- name: Mount rados block onto filesystem
+  command: sudo mount /dev/rbd/rbd/foo /mnt/ceph-block-device
+  become: yes
+  become_user: ceph-client

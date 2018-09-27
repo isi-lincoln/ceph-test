@@ -8,10 +8,9 @@
   become: yes
   become_user: ceph-admin
   register: clusterHealth
+  until: clusterHealth is succeeded
   failed_when: clusterHealth.stdout != "HEALTH_OK"
   tags:
     - debug
-
-#- debug: var=clusterHealth.stdout
-#  tags:
-#    - debug
+  retries: 6
+  delay: 10

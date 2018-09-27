@@ -1,0 +1,2 @@
+- name: configure client ceph
+  import_tasks: client_rbd_instance.yml

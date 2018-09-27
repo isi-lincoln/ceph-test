@@ -1,6 +1,5 @@
-
 cephs = {
-    node: Range(4).map(i => Client('ceph'+i))
+    node: Range(4).map(i => Ceph('ceph'+i))
 }
 
 switch1 = {
@@ -15,7 +14,6 @@ ports = {
     switch1: 1,
 }
 
-// use the raven image for fedora
 server = {
   name: 'server',
   image: 'ubuntu-1604',
@@ -23,19 +21,28 @@ server = {
   memory: { capacity: GB(4) },
 }
 
+client = {
+  name: 'client',
+  image: 'ubuntu-1604',
+  cpu: { cores: 2 },
+  memory: { capacity: GB(4) },
+}
+
 topo = {
-  name: 'sled-basic',
-  nodes: [...cephs.node, server],
+  name: 'ceph-test',
+  nodes: [...cephs.node, client, server],
   switches: [switch1],
   links: [
     ...cephs.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
     ...cephs.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
     Link('server', 0, 'switch1', ports.switch1++),
-    Link('server', 1, 'switch1', ports.switch1++)
+    Link('server', 1, 'switch1', ports.switch1++),
+    Link('client', 0, 'switch1', ports.switch1++),
+    Link('client', 1, 'switch1', ports.switch1++),
   ]
 }
 
-function Client(nameIn) {
+function Ceph(nameIn) {
     return ceph = {
       name: nameIn,
       image: 'ubuntu-1604',

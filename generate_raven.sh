@@ -19,6 +19,7 @@ else
 fi
 
 admin=$(rvn ip server)
+client=$(rvn ip client)
 ceph0=$(rvn ip ceph0)
 ceph1=$(rvn ip ceph1)
 ceph2=$(rvn ip ceph2)
@@ -35,6 +36,13 @@ $ceph3 hostname=ceph3
 
 [admin]
 $admin hostname=server
+
+[clients]
+$client hostname=client
+
+[nodes:children]
+clients
+deploy
 
 [all:vars]
 ansible_ssh_private_key_file=roles/common/files/keys/ansible_key
