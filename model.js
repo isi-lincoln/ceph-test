@@ -2,10 +2,10 @@ cephs = {
     node: Range(4).map(i => Node('ceph'+i))
 }
 
-names = ["server", "client", "driver", "commander"]
+names = ["server", "client", "driver", "commander", "database"]
 
 infra = {
-    node: Range(4).map(i => Node(names[i]))
+    node: Range(names.length).map(i => Node(names[i]))
 }
 
 switch1 = {

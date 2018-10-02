@@ -18,32 +18,76 @@ else
     exit 1
 fi
 
-admin=$(rvn ip server)
-client=$(rvn ip client)
-ceph0=$(rvn ip ceph0)
-ceph1=$(rvn ip ceph1)
-ceph2=$(rvn ip ceph2)
-ceph3=$(rvn ip ceph3)
+yaml () {
+	str=""
+	for i in "$@"
+	do
+		str+=$(printf "%s hostname=%s%s" "$(rvn ip $i)" "$i" "\n")
+	done
+	echo -e $str >> raven
+}
 
-cat > raven << EOF
-# auto generated file: raven
+hosts=( $(rvn status 2>&1 | grep "\s\s" | sed 's/^.*msg=//g' | sed 's/\s\+/ /g' | cut -d ' ' -f 2 | sort) )
+cephs=()
+admin=()
+client=()
+commander=()
+driver=()
+database=()
 
-[deploy]
-$ceph0 hostname=ceph0
-$ceph1 hostname=ceph1
-$ceph2 hostname=ceph2
-$ceph3 hostname=ceph3
+#echo $hosts
+for i in "${hosts[@]}"
+do
+	if [[ $i = *"ceph"* ]]; then
+		cephs+=($i)
+	fi
+	if [[ $i = *"server"* ]]; then
+		server+=($i)
+	fi
+	if [[ $i = *"client"* ]]; then
+		client+=($i)
+	fi
+	if [[ $i = *"commander"* ]]; then
+		commander+=($i)
+	fi
+	if [[ $i = *"driver"* ]]; then
+		driver+=($i)
+	fi
+	if [[ $i = *"database"* ]]; then
+		database+=($i)
+	fi
+done
 
-[admin]
-$admin hostname=server
+echo "# auto generated file: raven" > raven
 
-[clients]
-$client hostname=client
+echo "[deploy]" >> raven
+yaml ${cephs[@]}
 
-[nodes:children]
-clients
-deploy
+echo "[admin]" >> raven
+yaml $server
 
-[all:vars]
-ansible_ssh_private_key_file=roles/common/files/keys/ansible_key
-EOF
+echo "[clients]" >> raven
+yaml $client
+
+echo "[commander]" >> raven
+yaml $commander
+
+echo "[driver]" >> raven
+yaml $driver
+
+echo "[database]" >> raven
+yaml $database
+
+echo "[site:children]" >> raven
+echo "commander" >> raven
+echo "database" >> raven
+echo "driver" >> raven
+echo "" >> raven
+
+echo "[nodes:children]" >> raven
+echo "clients" >> raven
+echo "deploy" >> raven
+echo "" >> raven
+
+echo "[all:vars]" >> raven
+echo "ansible_ssh_private_key_file=roles/common/files/keys/ansible_key" >> raven
