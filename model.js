@@ -1,5 +1,11 @@
 cephs = {
-    node: Range(4).map(i => Ceph('ceph'+i))
+    node: Range(4).map(i => Node('ceph'+i))
+}
+
+names = ["server", "client", "driver", "commander"]
+
+infra = {
+    node: Range(4).map(i => Node(names[i]))
 }
 
 switch1 = {
@@ -14,31 +20,15 @@ ports = {
     switch1: 1,
 }
 
-server = {
-  name: 'server',
-  image: 'ubuntu-1604',
-  cpu: { cores: 2 },
-  memory: { capacity: GB(4) },
-}
-
-client = {
-  name: 'client',
-  image: 'ubuntu-1604',
-  cpu: { cores: 2 },
-  memory: { capacity: GB(4) },
-}
-
 topo = {
   name: 'ceph-test',
-  nodes: [...cephs.node, client, server],
+  nodes: [...cephs.node, ...infra.node],
   switches: [switch1],
   links: [
     ...cephs.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
     ...cephs.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
-    Link('server', 0, 'switch1', ports.switch1++),
-    Link('server', 1, 'switch1', ports.switch1++),
-    Link('client', 0, 'switch1', ports.switch1++),
-    Link('client', 1, 'switch1', ports.switch1++),
+    ...infra.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
+    ...infra.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
   ]
 }
 
@@ -55,5 +45,14 @@ function Ceph(nameIn) {
           bus: "virtio",
         },
       ],
+    };
+}
+
+function Node(nameIn) {
+    return ceph = {
+      name: nameIn,
+      image: 'ubuntu-1604',
+      cpu: { cores: 2 },
+      memory: { capacity: GB(4) },
     };
 }

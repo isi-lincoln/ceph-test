@@ -4,11 +4,21 @@ Built for a standalone environment to test building a ceph deployment using [rav
 
 ## Building
 
-0. `./generate_disks`  # build osds - Requires 80GB of storage
-1. `rvn build`  # build the raven topology
-2. `rvn deploy`  # deploy libvirt instances
-3. `rvn pingwait server`  # wait until server is reachable
-4. `rvn configure`  # configure each node (ip address, hostnames)
-5. `./generate_raven.sh`  # create the ansible inventory file
-6. `./install_ansible.sh`  # install ansible across all the nodes
-7. `ansible-playbook -i raven ceph.yml`  # run the ceph configuration
+`./build.sh`
+
+### Expanding
+
+If you want to build on this topology these are the steps to help:
+
+1. modify `model.js` to add the new nodes in the topology.  Make sure that beyond creating the new device, that you also add the Links to connect them.
+2. modify `config/switch1.conf` to add additional ports to the switch to support the new nodes/Links
+3. modify `generate_disks.sh` to add any additional disks to the nodes as given in `model.js`
+4. modify `generate_raven.sh` to add the names of the new nodes
+5. modify `install_ansible` to add the names of the new nodes
+
+## Scripts:
+
+`./build.sh`: Wrapper for all the scripts to get the topology from nothing - to ansible ready
+`./generate_disks.sh`: creates the qemu qcow2 disks for the ceph OSD nodes
+`./generate_raven.sh`: creates the ansible inventory file
+`./install_ansible.sh`: installs ansible + public key to all nodes

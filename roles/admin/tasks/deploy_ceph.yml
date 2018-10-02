@@ -91,6 +91,12 @@
   become: yes
   become_user: ceph-admin
 
+# btrfs also incorporates multi-device management into the file system, which
+# enables you to support heterogeneous disk storage infrastructure, data allocation
+# policies. The community also aims to provide fsck, deduplication, and data
+# encryption support in the future. This compelling list of features makes btrfs
+# the ideal choice for Ceph clusters.
+# http://docs.ceph.com/docs/jewel/rados/configuration/filesystem-recommendations/
 - name: Create OSDs - this will take a while...
   command: "ceph-deploy osd create --zap-disk --fs-type xfs {{ hostvars[item]['ansible_hostname'] }}:/dev/vdb"
   args:

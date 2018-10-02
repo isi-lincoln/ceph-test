@@ -18,7 +18,7 @@ else
     exit 1
 fi
 
-hosts=('server' 'client' 'ceph0' 'ceph1' 'ceph2' 'ceph3')
+hosts=('server' 'client' 'ceph0' 'ceph1' 'ceph2' 'ceph3' 'driver' 'commander')
 ansible_cmd1="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null"
 ansible_cmd2="sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
 death_to_apt='sudo kill -9 \`ps aux | grep apt | grep -v lock | grep -v grep | sed \"s/\s\+/ /g\" | cut -d \" \" -f 2\`'
@@ -49,16 +49,27 @@ do_install () {
     eval $(printf "%s \"%s\"" "$1" "$add_key")
 }
 
+# Thread across all the nodes
+pid_list=()
 for i in "${hosts[@]}"
 do
 	host=$(rvn ssh $i)
 	prep_host "${host}" $i &
+	pid_list+=($!)
+done
+for i in "${pid_list[@]}"
+do
+	wait $i
 done
 
-sleep $timer
-
+pid_list=()
 for i in "${hosts[@]}"
 do
 	host=$(rvn ssh $i)
-	do_install "${host}" $i
+	do_install "${host}" $i &
+	pid_list+=($!)
+done
+for i in "${pid_list[@]}"
+do
+	wait $i
 done
