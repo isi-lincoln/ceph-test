@@ -19,6 +19,9 @@ If you want to build on this topology these are the steps to help:
 ## Scripts:
 
 `./build.sh`: Wrapper for all the scripts to get the topology from nothing - to ansible ready
+
 `./generate_disks.sh`: creates the qemu qcow2 disks for the ceph OSD nodes
+
 `./generate_raven.sh`: creates the ansible inventory file
+
 `./install_ansible.sh`: installs ansible + public key to all nodes
