@@ -1,5 +1,7 @@
 ---
 - import_playbook: precheck.yml
+- import_playbook: cephdatabase.yml
+- import_playbook: cephcommander.yml
 - import_playbook: cephclient.yml
 - import_playbook: cephdeploy.yml
 - import_playbook: cephadmin.yml

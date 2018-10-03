@@ -1,0 +1,214 @@
+---
+
+- name: "apt-get update"
+  apt:
+    update_cache: yes
+  tags:
+    - commander
+
+- name: "apt-get upgrade"
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - etcd
+    - git
+    - libprotoc-dev
+  tags:
+    - commander
+
+- name: delete all go stuff
+  file:
+    path: /root/go/
+    state: absent
+  become: yes
+  tags:
+    - commander
+
+- name: delete all gosrc stuff
+  file:
+    path: /root/gosrc
+    state: absent
+  become: yes
+  tags:
+    - commander
+
+- name: delete all go.gz stuff
+  file:
+    path: /root/go*.gz
+    state: absent
+  become: yes
+  tags:
+    - commander
+
+- name: get golang 1.10.3
+  get_url:
+    url: https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz
+    dest: /root/go1.11.1.linux-amd64.tar.gz
+    checksum: sha256:2871270d8ff0c8c69f161aaae42f9f28739855ff5c5204752a8d92a1c9f63993
+  become: yes
+  tags:
+    - commander
+
+- name: create gosrc stuff
+  file:
+    path: /root/gosrc
+    owner: root
+    group: root
+    state: directory
+    mode: 0775
+  become: yes
+  tags:
+    - commander
+
+
+- name: Extract golang
+  unarchive:
+    src: /root/go1.11.1.linux-amd64.tar.gz
+    dest: /root/gosrc/
+    remote_src: yes
+  become: yes
+  tags:
+    - commander
+
+- name: copy go to /usr/bin
+  copy:
+    src: /root/gosrc/go/bin/go
+    dest: /usr/bin/go
+    mode: 0755
+    remote_src: yes
+  become: yes
+  tags:
+    - commander
+
+- name: "kill commander"
+  shell: killall commander
+  ignore_errors: yes
+  become: yes
+  tags:
+    - commander
+
+- name: "kill etcd instances"
+  shell: killall etcd
+  ignore_errors: yes
+  become: yes
+  tags:
+    - commander
+
+- name: "kill golang instances"
+  shell: killall golang
+  ignore_errors: yes
+  become: yes
+  tags:
+    - commander
+
+- name: flush iptable rules
+  iptables:
+    flush: yes
+  tags:
+    - commander
+
+- name: add etcd iptable rule
+  iptables:
+    chain: INPUT
+    in_interface: eth1
+    protocol: tcp
+    source: 10.0.0.0/24
+    destination_port: 2379:2380
+    jump: ACCEPT
+  become: yes
+  tags:
+    - commander
+
+- name: copy host file to commander
+  template:
+    src: roles/commander/templates/hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  become: yes
+  tags:
+    - commander
+
+- name: create go stuff
+  file:
+    path: /root/go/src/gitlab.com/mergetb/
+    owner: root
+    group: root
+    state: directory
+    mode: 0775
+  become: yes
+  tags:
+    - commander
+
+- name: get latest commander code
+  git:
+    repo: 'https://gitlab.com/mergetb/site.git'
+    dest: /root/go/src/gitlab.com/mergetb/site
+    clone: yes
+    update: yes
+  become: yes
+  tags:
+    - commander
+
+- name: get protobuf
+  shell: go get -u github.com/golang/protobuf/protoc-gen-go
+  environment:
+    GOPATH: /root/go/
+    GOROOT: /root/gosrc/go
+  become: yes
+  tags:
+    - commander
+
+- name: get dep
+  shell: go get -u github.com/golang/dep/cmd/dep
+  environment:
+    GOPATH: /root/go/
+    GOROOT: /root/gosrc/go
+  become: yes
+  tags:
+    - commander
+
+- name: dep ensure
+  shell: $GOBIN/dep ensure -v
+  args:
+    chdir: /root/go/src/gitlab.com/mergetb/site
+  environment:
+    GOPATH: /root/go/
+    GOROOT: /root/gosrc/go
+    GOBIN: /root/go/bin
+  become: yes
+  tags:
+    - commander
+
+- name: make commander
+  make:
+    chdir: /root/go/src/gitlab.com/mergetb/site
+    target: all
+  become: yes
+  environment:
+    GOPATH: /root/go/
+    GOROOT: /root/gosrc/go
+  tags:
+    - commander
+
+- name: move commander to /usr/bin
+  copy:
+    src: /root/go/src/gitlab.com/mergetb/site/build/commander
+    dest: /usr/bin/commander
+    mode: 0755
+    remote_src: yes
+  become: yes
+  tags:
+    - commander
+
+- name: start commander daemon
+  shell: nohup commander &
+  become: yes
+  environment:
+    DB_HOST: "database"
+    DB_PORT: 2379
+    CMDR_HOST: "{{ hostvars[groups['commander'][0]]['ceph_ip'] }}"
+  tags:
+    - commander

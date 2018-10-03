@@ -9,3 +9,11 @@
       with_items: "{{ ansible_all_ipv4_addresses }}"
       when: "item.startswith('10.0.0')"
     - debug: var=ceph_ip
+  tags:
+    - all
+    - commander
+    - database
+    - driver
+    - client
+    - deploy
+    - admin

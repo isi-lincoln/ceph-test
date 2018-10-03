@@ -1,0 +1,5 @@
+---
+- hosts: commander
+  roles:
+    - common
+    - commander

@@ -1,0 +1,48 @@
+---
+
+- name: "apt-get update"
+  apt:
+    update_cache: yes
+  tags:
+    - database
+
+- name: "apt-get upgrade"
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - etcd
+  tags:
+    - database
+
+- name: "kill etcd instances"
+  shell: killall etcd
+  become: yes
+  tags:
+    - database
+
+- name: flush iptable rules
+  iptables:
+    flush: yes
+  tags:
+    - database
+
+- name: add etcd iptable rule
+  iptables:
+    chain: INPUT
+    in_interface: eth1
+    protocol: tcp
+    source: 10.0.0.0/24
+    destination_port: 2379:2380
+    jump: ACCEPT
+  become: yes
+  tags:
+    - database
+
+- name: "Run etcd as daemon"
+  shell: nohup etcd -data-dir=/etcd-data --name "driver-store" --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://localhost:2380 --initial-advertise-peer-urls "http://localhost:2380" --initial-cluster "driver-store=http://localhost:2380" &
+  become: yes
+  environment:
+    ETCDCTL_API: 3
+  tags:
+    - database

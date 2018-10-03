@@ -1,0 +1,19 @@
+127.0.0.1 localhost
+# Jinja added ansible hosts for site
+{% for minion in groups['site'] %}
+{{ hostvars[minion]['ceph_ip'] }} {{ hostvars[minion]['ansible_hostname'] }}
+{% endfor %}
+
+# Add ceph admin to communicate via to ceph
+{% for minion in groups['admin'] %}
+{{ hostvars[minion]['ceph_ip'] }} {{ hostvars[minion]['ansible_hostname'] }}
+{% endfor %}
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+127.0.0.1 {{ hostvars[groups['driver'][0]]['ansible_hostname'] }}
