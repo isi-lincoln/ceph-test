@@ -18,7 +18,8 @@ else
     exit 1
 fi
 
-hosts=$(rvn status 2>&1 | grep "\s\s" | sed 's/^.*msg=//g' | sed 's/\s\+/ /g' | cut -d ' ' -f 2 | sort | xargs)
+# all the raven nodes except the switches get ansible
+hosts=( $(rvn status 2>&1 | grep "\s\s" | sed 's/^.*msg=//g' | sed 's/\s\+/ /g' | cut -d ' ' -f 2 | sort | grep -v "switch") )
 ansible_cmd1="sudo DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null"
 ansible_cmd2="sudo DEBIAN_FRONTEND=noninteractive apt-get install -qqy ansible > /dev/null"
 death_to_apt='sudo kill -9 \`ps aux | grep apt | grep -v lock | grep -v grep | sed \"s/\s\+/ /g\" | cut -d \" \" -f 2\`'
@@ -26,7 +27,7 @@ create_dir="sudo mkdir -p /root/.ssh/"
 chmod_dir="sudo chmod 700 /root/.ssh/"
 pubkey=$(cat roles/common/files/keys/ansible_key.pub)
 add_key="sudo bash -c 'echo $pubkey >> /root/.ssh/authorized_keys'"
-timer=1
+timer=.5
 
 prep_host () {
     # install ansible
