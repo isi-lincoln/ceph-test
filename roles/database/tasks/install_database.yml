@@ -5,6 +5,7 @@
     update_cache: yes
   tags:
     - database
+    - site
 
 - name: "apt-get upgrade"
   apt:
@@ -14,18 +15,21 @@
     - etcd
   tags:
     - database
+    - site
 
 - name: "kill etcd instances"
   shell: killall etcd
   become: yes
   tags:
     - database
+    - site
 
 - name: flush iptable rules
   iptables:
     flush: yes
   tags:
     - database
+    - site
 
 - name: add etcd iptable rule
   iptables:
@@ -38,6 +42,7 @@
   become: yes
   tags:
     - database
+    - site
 
 - name: "Run etcd as daemon"
   shell: nohup etcd -data-dir=/etcd-data --name "driver-store" --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://localhost:2380 --initial-advertise-peer-urls "http://localhost:2380" --initial-cluster "driver-store=http://localhost:2380" &
@@ -46,3 +51,4 @@
     ETCDCTL_API: 3
   tags:
     - database
+    - site
