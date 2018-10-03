@@ -1,5 +1,5 @@
 cephs = {
-    node: Range(4).map(i => Node('ceph'+i))
+    node: Range(4).map(i => Ceph('ceph'+i))
 }
 
 names = ["server", "client", "driver", "commander", "database"]

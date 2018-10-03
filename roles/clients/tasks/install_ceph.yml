@@ -7,8 +7,11 @@
 
 - name: Install ceph-deploy
   apt:
-    name: "ceph-deploy"
+    name: "{{ item }}"
     state: latest
+  with_items:
+    - "ceph-deploy"
+    - "ceph-common"
 
 - name: Make sure we have a 'wheel' group
   group:
@@ -65,6 +68,7 @@
 - name: find all rdb images
   command: rbd ls
   register: rbdls
+  ignore_errors: yes
 
 - name: unmap all the rados blocks
   command: "rbd unmap {{ item }}"
