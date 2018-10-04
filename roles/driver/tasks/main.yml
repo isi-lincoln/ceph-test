@@ -1,2 +1,2 @@
-- name: install database
-  import_tasks: install_database.yml
+- name: install driver
+  import_tasks: install_driver.yml

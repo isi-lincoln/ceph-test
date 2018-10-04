@@ -32,19 +32,27 @@ topo = {
   ]
 }
 
+
+
+function cephDisks(nameIn) {
+	disks = [];
+	for (i = 0; i < 8; i++) {
+		disks.push({
+			size: "20G",
+			dev: "vd" + String.fromCharCode('b'.charCodeAt() + i) ,
+			bus: "virtio",
+		})
+	}
+	return disks
+}
+
 function Ceph(nameIn) {
     return ceph = {
       name: nameIn,
       image: 'ubuntu-1604',
       cpu: { cores: 2 },
       memory: { capacity: GB(4) },
-      disks: [
-        {
-          source: env.PWD + "/storage/" + nameIn,
-          dev: "vdb",
-          bus: "virtio",
-        },
-      ],
+      disks: cephDisks(nameIn),
     };
 }
 

@@ -11,12 +11,6 @@ if rvn destroy; then
 else
 	exit 1
 fi
-if ./generate_disks.sh; then
-	echo "Generated Disks for Topology"
-else
-	exit 1
-fi
-
 if rvn build; then
 	echo "Built Raven Topology"
 else
