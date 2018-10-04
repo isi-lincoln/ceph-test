@@ -51,7 +51,6 @@
     - driver
     - site
 
-
 - name: Extract protobuf
   unarchive:
     src: /root/protoc-3.6.1-linux-x86_64.zip
@@ -315,7 +314,6 @@
   tags:
     - driver
     - site
-    - test
 
 - name: start driver (josephine) service
   systemd:
@@ -325,7 +323,6 @@
   tags:
     - driver
     - site
-    - test
 
 - name: restart driver (josephine) to pick up daemon changes
   systemd:
@@ -335,4 +332,3 @@
   tags:
     - driver
     - site
-    - test

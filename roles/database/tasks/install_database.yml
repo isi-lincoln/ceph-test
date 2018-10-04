@@ -70,7 +70,6 @@
   tags:
     - database
     - site
-    - test
 
 - name: "kill etcd instances"
   shell: killall etcd
@@ -78,7 +77,6 @@
   tags:
     - database
     - site
-    - test
 
 - name: remove etcd2 service install by apt
   file:
@@ -88,7 +86,6 @@
   tags:
     - database
     - site
-    - test
 
 - name: flush iptable rules
   iptables:
@@ -120,7 +117,6 @@
   tags:
     - database
     - site
-    - test
 
 - name: start database (etcd) service
   systemd:
@@ -130,7 +126,6 @@
   tags:
     - database
     - site
-    - test
 
 - name: restart database (etcd) to pick up daemon changes
   systemd:
@@ -140,14 +135,12 @@
   tags:
     - database
     - site
-    - test
 
 - name: "Destroy database if it exists"
-  shell: etcdctl del --prefix /
+  shell: etcdctl del --prefix=true /
   become: yes
   environment:
     ETCDCTL_API: 3
   tags:
     - database
     - site
-    - test
