@@ -151,6 +151,16 @@
     - driver
     - site
 
+- name: stop driver (Josephine) service
+  systemd:
+    state: started
+    enabled: False
+    name: josephine
+  ignore_errors: yes
+  tags:
+    - driver
+    - site
+
 - name: "kill driver"
   shell: killall driver
   ignore_errors: yes
@@ -294,15 +304,35 @@
   tags:
     - driver
     - site
-    - driver-test
 
-- name: start driver daemon
-  shell: nohup driver &
+- name: copy systemd file to driver
+  template:
+    src: roles/driver/templates/josephine.service.j2
+    dest: /etc/systemd/system/josephine.service
+    owner: root
+    group: root
   become: yes
-  environment:
-    DB_HOST: "database"
-    CMDR_HOST: "commander"
   tags:
     - driver
     - site
-    - driver-test
+    - test
+
+- name: start driver (josephine) service
+  systemd:
+    state: started
+    enabled: True
+    name: josephine
+  tags:
+    - driver
+    - site
+    - test
+
+- name: restart driver (josephine) to pick up daemon changes
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: josephine
+  tags:
+    - driver
+    - site
+    - test

@@ -1,0 +1,13 @@
+[Unit]
+Description=Mergetb commander service (napoleon)
+
+[Service]
+Environment=DB_HOST={{ hostvars[groups['database'][0]]['ansible_hostname'] }}
+Environment=DB_PORT=2379
+Environment=CMDR_HOST={{ hostvars[groups['commander'][0]]['ceph_ip'] }}
+ExecStart=/usr/bin/commander
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=default.target

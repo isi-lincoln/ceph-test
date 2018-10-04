@@ -1,0 +1,12 @@
+[Unit]
+Description=Mergetb driver service (josephine)
+
+[Service]
+Environment=NODE_HOST={{ hostvars[groups['driver'][0]]['ceph_ip'] }}
+Environment=CMDR_HOST={{ hostvars[groups['commander'][0]]['ceph_ip'] }}
+ExecStart=/usr/bin/driver
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=default.target

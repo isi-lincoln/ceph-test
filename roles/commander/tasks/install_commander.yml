@@ -92,6 +92,16 @@
     - commander
     - site
 
+- name: stop commander (napoleon) service
+  systemd:
+    state: started
+    enabled: False
+    name: napoleon
+  ignore_errors: yes
+  tags:
+    - commander
+    - site
+
 - name: "kill commander"
   shell: killall commander
   ignore_errors: yes
@@ -227,13 +237,31 @@
     - commander
     - site
 
-- name: start commander daemon
-  shell: nohup commander &
+- name: copy systemd file to commander
+  template:
+    src: roles/commander/templates/napoleon.service.j2
+    dest: /etc/systemd/system/napoleon.service
+    owner: root
+    group: root
   become: yes
-  environment:
-    DB_HOST: "database"
-    DB_PORT: 2379
-    CMDR_HOST: "{{ hostvars[groups['commander'][0]]['ceph_ip'] }}"
+  tags:
+    - commander
+    - site
+
+- name: start commander (napoleon) service
+  systemd:
+    state: started
+    enabled: True
+    name: napoleon
+  tags:
+    - commander
+    - site
+
+- name: restart commander (napoleon) to pick up daemon changes
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: napoleon
   tags:
     - commander
     - site

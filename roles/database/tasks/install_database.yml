@@ -7,15 +7,70 @@
     - database
     - site
 
-- name: "apt-get upgrade"
-  apt:
-    name: "{{ item }}"
-    state: latest
-  with_items:
-    - etcd
+- name: wget etcd 3.3.9
+  get_url:
+    url: https://github.com/etcd-io/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz
+    dest: /root/etcd-v3.3.9-linux-amd64.tar.gz
+    checksum: sha256:7b95bdc6dfd1d805f650ea8f886fdae6e7322f886a8e9d1b0d14603767d053b1
+  become: yes
   tags:
     - database
     - site
+
+- name: create etcd stuff
+  file:
+    path: /root/etcd
+    owner: root
+    group: root
+    state: directory
+    mode: 0775
+  become: yes
+  tags:
+    - database
+    - site
+
+- name: Extract etcd
+  unarchive:
+    src: /root/etcd-v3.3.9-linux-amd64.tar.gz
+    dest: /root/etcd-v3.3.9-linux-amd64
+    remote_src: yes
+  become: yes
+  tags:
+    - database
+    - site
+
+- name: copy etcd to /usr/bin
+  copy:
+    src: /root/etcd-v3.3.9-linux-amd64/etcd
+    dest: /usr/bin/
+    mode: 0755
+    remote_src: yes
+  become: yes
+  tags:
+    - database
+    - site
+
+- name: copy etcdctl to /usr/bin
+  copy:
+    src: /root/etcd-v3.3.9-linux-amd64/etcdctl
+    dest: /usr/bin/
+    mode: 0755
+    remote_src: yes
+  become: yes
+  tags:
+    - database
+    - site
+
+- name: stop database service
+  systemd:
+    state: started
+    enabled: False
+    name: etcd
+  ignore_errors: yes
+  tags:
+    - database
+    - site
+    - test
 
 - name: "kill etcd instances"
   shell: killall etcd
@@ -23,6 +78,17 @@
   tags:
     - database
     - site
+    - test
+
+- name: remove etcd2 service install by apt
+  file:
+    path: /etc/systemd/system/etcd2.service
+    state: absent
+  become: yes
+  tags:
+    - database
+    - site
+    - test
 
 - name: flush iptable rules
   iptables:
@@ -44,11 +110,44 @@
     - database
     - site
 
-- name: "Run etcd as daemon"
-  shell: nohup etcd -data-dir=/etcd-data --name "driver-store" --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://localhost:2380 --initial-advertise-peer-urls "http://localhost:2380" --initial-cluster "driver-store=http://localhost:2380" &
+- name: copy systemd file to database
+  template:
+    src: roles/database/templates/etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+    owner: root
+    group: root
+  become: yes
+  tags:
+    - database
+    - site
+    - test
+
+- name: start database (etcd) service
+  systemd:
+    state: started
+    enabled: True
+    name: etcd
+  tags:
+    - database
+    - site
+    - test
+
+- name: restart database (etcd) to pick up daemon changes
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: etcd
+  tags:
+    - database
+    - site
+    - test
+
+- name: "Destroy database if it exists"
+  shell: etcdctl del --prefix /
   become: yes
   environment:
     ETCDCTL_API: 3
   tags:
     - database
     - site
+    - test

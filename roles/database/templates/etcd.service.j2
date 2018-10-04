@@ -1,0 +1,14 @@
+[Unit]
+Description=Mergetb database service
+
+[Service]
+Environment=ETCDCTL_API=3
+ExecStart=/usr/bin/etcd -data-dir=/etcd-data --name "driver-store" --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://localhost:2380 --initial-advertise-peer-urls "http://localhost:2380" --initial-cluster "driver-store=http://localhost:2380"
+Type=simple
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+TimeoutStartSec=0
+
+[Install]
+WantedBy=default.target
