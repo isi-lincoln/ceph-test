@@ -240,7 +240,6 @@
   tags:
     - driver
     - site
-    - test-d
 
 - name: get dep
   shell: go get -u github.com/golang/dep/cmd/dep
@@ -265,6 +264,13 @@
     - driver
     - site
 
+- name: set path variable
+  set_fact:
+    path_var:  "{{ lookup('env','PATH') }}"
+  tags:
+    - driver
+    - site
+
 - name: make driver
   make:
     chdir: /root/go/src/gitlab.com/dcomptb/agents/node
@@ -273,14 +279,14 @@
   environment:
     GOPATH: /root/go/
     GOROOT: /root/gosrc/go
+    PATH: "{{ path_var }}:/root/go/bin"
   tags:
     - driver
     - site
-    - test-d
 
 - name: move driver to /usr/bin
   copy:
-    src: /root/go/src/gitlab.com/dcomptb/agent/node/build/driver
+    src: /root/go/src/gitlab.com/dcomptb/agents/node/build/driver
     dest: /usr/bin/driver
     mode: 0755
     remote_src: yes
@@ -288,6 +294,7 @@
   tags:
     - driver
     - site
+    - driver-test
 
 - name: start driver daemon
   shell: nohup driver &
