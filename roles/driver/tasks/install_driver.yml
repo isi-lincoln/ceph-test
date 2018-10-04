@@ -20,6 +20,67 @@
     - driver
     - site
 
+- name: delete all protobuf stuff
+  file:
+    path: /root/protoc*
+    state: absent
+  become: yes
+  tags:
+    - driver
+    - site
+
+- name: get protobuf3
+  get_url:
+    url: https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+    dest: /root/protoc-3.6.1-linux-x86_64.zip
+    checksum: sha256:6003de742ea3fcf703cfec1cd4a3380fd143081a2eb0e559065563496af27807
+  become: yes
+  tags:
+    - driver
+    - site
+
+- name: create protoc stuff
+  file:
+    path: /root/protoc
+    owner: root
+    group: root
+    state: directory
+    mode: 0775
+  become: yes
+  tags:
+    - driver
+    - site
+
+
+- name: Extract protobuf
+  unarchive:
+    src: /root/protoc-3.6.1-linux-x86_64.zip
+    dest: /root/protoc
+    remote_src: yes
+  become: yes
+  tags:
+    - driver
+    - site
+
+- name: copy protobuf to /usr/bin
+  copy:
+    src: /root/protoc/bin/protoc
+    dest: /usr/bin/
+    mode: 0755
+    remote_src: yes
+  become: yes
+  tags:
+    - driver
+    - site
+
+# ansible sucks sometimes.
+- name: copy protobuf to /usr/bin
+  command: sudo cp -r /root/protoc/include/ /usr/local/include/
+  become: yes
+  tags:
+    - driver
+    - site
+
 - name: delete all go stuff
   file:
     path: /root/go/
@@ -160,8 +221,8 @@
 
 - name: get latest driver code
   git:
-    repo: 'https://gitlab.com/mergetb/site.git'
-    dest: /root/go/src/gitlab.com/mergetb/site
+    repo: 'https://gitlab.com/dcomptb/agents.git'
+    dest: /root/go/src/gitlab.com/dcomptb/agents
     clone: yes
     update: yes
   become: yes
@@ -169,15 +230,17 @@
     - driver
     - site
 
-- name: get protobuf
+- name: get go-protobuf
   shell: go get -u github.com/golang/protobuf/protoc-gen-go
   environment:
     GOPATH: /root/go/
+    GOBIN: /root/go/bin
     GOROOT: /root/gosrc/go
   become: yes
   tags:
     - driver
     - site
+    - test-d
 
 - name: get dep
   shell: go get -u github.com/golang/dep/cmd/dep
@@ -192,7 +255,7 @@
 - name: dep ensure
   shell: $GOBIN/dep ensure -v
   args:
-    chdir: /root/go/src/gitlab.com/mergetb/site
+    chdir: /root/go/src/gitlab.com/dcomptb/agents
   environment:
     GOPATH: /root/go/
     GOROOT: /root/gosrc/go
@@ -204,7 +267,7 @@
 
 - name: make driver
   make:
-    chdir: /root/go/src/gitlab.com/mergetb/site
+    chdir: /root/go/src/gitlab.com/dcomptb/agents/node
     target: all
   become: yes
   environment:
@@ -213,10 +276,11 @@
   tags:
     - driver
     - site
+    - test-d
 
 - name: move driver to /usr/bin
   copy:
-    src: /root/go/src/gitlab.com/mergetb/site/build/mock-driver
+    src: /root/go/src/gitlab.com/dcomptb/agent/node/build/driver
     dest: /usr/bin/driver
     mode: 0755
     remote_src: yes
