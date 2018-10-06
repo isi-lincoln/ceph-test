@@ -16,6 +16,9 @@
     - git
     - libprotoc-dev
     - make
+    - gcc
+    - librados-dev # librados2-devel
+    - librbd-dev
   tags:
     - driver
     - site
@@ -234,6 +237,17 @@
     dest: /root/go/src/gitlab.com/dcomptb/agents
     clone: yes
     update: yes
+  become: yes
+  tags:
+    - driver
+    - site
+
+- name: get go-protobuf
+  shell: go get github.com/ceph/go-ceph
+  environment:
+    GOPATH: /root/go/
+    GOBIN: /root/go/bin
+    GOROOT: /root/gosrc/go
   become: yes
   tags:
     - driver
