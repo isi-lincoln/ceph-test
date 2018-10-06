@@ -19,6 +19,7 @@
     - gcc
     - librados-dev # librados2-devel
     - librbd-dev
+    - libcephfs-dev
   tags:
     - driver
     - site
