@@ -3,9 +3,17 @@
 - name: "apt-get update"
   apt:
     update_cache: yes
+  when: ansible_distribution == "Debian"
 
 - name: "apt-get upgrade"
   apt:
     name: "*"
     state: latest
     force_apt_get: true
+  when: ansible_distribution == "Debian"
+
+- name: "dnf upgrade"
+  dnf:
+    name: "*"
+    state: latest
+  when: ansible_distribution == "Fedora"

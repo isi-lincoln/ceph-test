@@ -105,7 +105,7 @@
   become: yes
   become_user: ceph-admin
 
-# we dont need a meta data server on every node.
+# we dont need a meta data server on every node.  These are used for cephfs
 - name: Create Metadata Server
   command: "ceph-deploy mds create {{ item }}"
   args:
@@ -117,6 +117,7 @@
   become_user: ceph-admin
 
 # check quorum with `ceph quorum_status --format json-pretty` on cephX nodes
+# should be odd, min 3. As we have 4 nodes, we will settle with 3
 - name: Create a ceph monitors (3 for HA)
   command: "ceph-deploy mon add {{ item }}"
   args:

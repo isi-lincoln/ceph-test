@@ -49,7 +49,7 @@ function cephDisks(nameIn) {
 function Ceph(nameIn) {
     return ceph = {
       name: nameIn,
-      image: 'ubuntu-1604',
+      image: 'fedora-28',
       cpu: { cores: 2 },
       memory: { capacity: GB(4) },
       disks: cephDisks(nameIn),
@@ -59,7 +59,7 @@ function Ceph(nameIn) {
 function Node(nameIn) {
     return ceph = {
       name: nameIn,
-      image: 'ubuntu-1604',
+      image: 'fedora-28',
       cpu: { cores: 2 },
       memory: { capacity: GB(4) },
     };
