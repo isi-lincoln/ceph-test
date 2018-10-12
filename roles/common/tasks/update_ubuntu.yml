@@ -17,3 +17,12 @@
     name: "*"
     state: latest
   when: ansible_distribution == "Fedora"
+
+- name: "dnf install ansible-firewalld"
+  dnf:
+    name: "{{item}}"
+    state: latest
+  with_items:
+    - "firewalld"
+    - "python3-firewall"
+  when: ansible_distribution == "Fedora"

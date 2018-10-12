@@ -27,6 +27,15 @@ yaml () {
 	echo -e $str >> raven
 }
 
+yamlFedora () {
+	str=""
+	for i in "$@"
+	do
+		str+=$(printf "%s hostname=%s ansible_python_interpreter=/usr/bin/python3%s" "$(rvn ip $i)" "$i" "\n")
+	done
+	echo -e $str >> raven
+}
+
 hosts=( $(rvn status 2>&1 | grep "\s\s" | sed 's/^.*msg=//g' | sed 's/\s\+/ /g' | cut -d ' ' -f 2 | sort) )
 cephs=()
 admin=()
@@ -61,22 +70,22 @@ done
 echo "# auto generated file: raven" > raven
 
 echo "[deploy]" >> raven
-yaml ${cephs[@]}
+yamlFedora ${cephs[@]}
 
 echo "[admin]" >> raven
-yaml $server
+yamlFedora $server
 
 echo "[clients]" >> raven
-yaml $client
+yamlFedora $client
 
 echo "[commander]" >> raven
-yaml $commander
+yamlFedora $commander
 
 echo "[driver]" >> raven
-yaml $driver
+yamlFedora $driver
 
 echo "[database]" >> raven
-yaml $database
+yamlFedora $database
 
 echo "[site:children]" >> raven
 echo "commander" >> raven
