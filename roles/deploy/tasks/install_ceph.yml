@@ -4,16 +4,42 @@
   apt_key:
     url: https://download.ceph.com/keys/release.asc
     state: present
+  tags:
+    - deploy
+    - ceph
+  when: ansible_distribution == "Ubuntu"
 
 - name: Install ceph-deploy
   apt:
-    name: "ceph-deploy"
+    name: "{{ item }}"
     state: latest
+  with_items:
+    - "ceph-deploy"
+    - "ceph-common"
+  tags:
+    - deploy
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+- name: "dnf install packages"
+  dnf:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - "ceph-deploy"
+    - "ceph-common"
+  tags:
+    - deploy
+    - ceph
+  when: ansible_distribution == "Fedora"
 
 - name: Make sure we have a 'wheel' group
   group:
     name=wheel
     state=present
+  tags:
+    - deploy
+    - ceph
 
 - name: Allow wheel group to have passwordless sudo
   lineinfile:
@@ -21,11 +47,14 @@
     state: present
     regexp: '^%wheel'
     line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+  tags:
+    - deploy
+    - ceph
 
-- name: Create ceph-deploy user
+- name: Create ceph-client user
   user:
-    name: ceph-worker
-    comment: Ceph Deploy Worker
+    name: ceph-client
+    comment: Ceph Client
     create_home: yes
     groups: wheel
     append: yes
@@ -33,17 +62,27 @@
     ssh_key_bits: 1024
     ssh_key_file: .ssh/id_rsa
     state: present
+  tags:
+    - deploy
+    - ceph
 
-- name: copying over public key to ceph-deploy
+- name: copying over public key to ceph-client
   copy:
     src: roles/common/files/keys/ceph_admin.pub
-    dest: /home/ceph-worker/.ssh/authorized_keys
-    owner: ceph-worker
+    dest: /home/ceph-client/.ssh/authorized_keys
+    owner: ceph-client
     mode: 0644
+  tags:
+    - deploy
+    - ceph
 
 - name: flush iptable rules
   iptables:
     flush: yes
+  tags:
+    - deploy
+    - ceph
+  when: ansible_distribution == "Ubuntu"
 
 - name: add ceph iptable rule
   iptables:
@@ -54,3 +93,38 @@
     destination_port: 6789
     jump: ACCEPT
   become: yes
+  tags:
+    - deploy
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+- name: Enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  tags:
+    - deploy
+    - site
+  when: ansible_distribution == "Fedora"
+
+- name: Set dmz as default policy
+  command: firewall-cmd --set-default-zone=public
+  tags:
+    - deploy
+    - site
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) add etcd firewalld rule
+  firewalld:
+    zone: public
+    port: 6789/tcp
+    source: 10.0.0.0/24
+    permanent: true
+    immediate: true
+    state: enabled
+  become: yes
+  tags:
+    - deploy
+    - site
+  when: ansible_distribution == "Fedora"

@@ -4,16 +4,43 @@
   apt_key:
     url: https://download.ceph.com/keys/release.asc
     state: present
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Ubuntu"
 
 - name: Install ceph-deploy
   apt:
-    name: "ceph-deploy"
     state: latest
+  with_items:
+    - ceph-deploy
+    - ntp
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+- name: "dnf install packages"
+  dnf:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - ceph-deploy
+    - ntp
+    - ntpdate
+    - ntp-doc
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Fedora"
 
 - name: Make sure we have a 'wheel' group
   group:
     name=wheel
     state=present
+  tags:
+    - admin
+    - ceph
 
 - name: Allow wheel group to have passwordless sudo
   lineinfile:
@@ -21,6 +48,9 @@
     state: present
     regexp: '^%wheel'
     line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+  tags:
+    - admin
+    - ceph
 
 - name: Create ceph-admin user
   user:
@@ -33,6 +63,9 @@
     ssh_key_bits: 1024
     ssh_key_file: .ssh/id_rsa
     state: present
+  tags:
+    - admin
+    - ceph
 
 - name: copying over private key to ceph-admin
   copy:
@@ -41,6 +74,9 @@
     owner: ceph-admin
     group: ceph-admin
     mode: 0600
+  tags:
+    - admin
+    - ceph
 
 - name: copying over public key to ceph-admin
   copy:
@@ -49,6 +85,9 @@
     owner: ceph-admin
     group: ceph-admin
     mode: 0644
+  tags:
+    - admin
+    - ceph
 
 - name: copy host file to admin server
   template:
@@ -57,6 +96,9 @@
     owner: root
     group: root
     mode: 0644
+  tags:
+    - admin
+    - ceph
 
 - name: copy ssh config file to admin server
   template:
@@ -65,10 +107,17 @@
     owner: ceph-admin
     group: ceph-admin
     mode: 0644
+  tags:
+    - admin
+    - ceph
 
 - name: flush iptable rules
   iptables:
     flush: yes
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Ubuntu"
 
 - name: add ceph iptable rule
   iptables:
@@ -79,6 +128,41 @@
     destination_port: 6789
     jump: ACCEPT
   become: yes
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+- name: Enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Fedora"
+
+- name: Set dmz as default policy
+  command: firewall-cmd --set-default-zone=public
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) add etcd firewalld rule
+  firewalld:
+    zone: public
+    port: 6789/tcp
+    source: 10.0.0.0/24
+    permanent: true
+    immediate: true
+    state: enabled
+  become: yes
+  tags:
+    - admin
+    - site
+  when: ansible_distribution == "Fedora"
 
 - name: create & wipe contents of known_hosts file
   copy:
@@ -88,19 +172,38 @@
     owner: ceph-admin
     group: ceph-admin
     mode: 0644
+  tags:
+    - admin
+    - site
 
 - name: run ssh-keyscan to add keys to known_hosts for eth0
   shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /home/ceph-admin/.ssh/known_hosts"
   with_items: "{{ groups['nodes'] }}"
+  tags:
+    - admin
+    - site
 
 # this requires the precheck.yml to configure ceph_ip eth1 interfaces for ansible variable
 - name: run ssh-keyscan to add keys to known_hosts for eth1
   shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-admin/.ssh/known_hosts"
   with_items: "{{ groups['nodes'] }}"
+  tags:
+    - admin
+    - site
 
-#- name: write ssh to known_hosts
-#lineinfile:
-#  dest: /home/ceph-admin/.ssh/known_hosts
-#  line: "{{ item.stdout }}"
-#  insertafter: EOF
-#with_items: "{{ test.results }}"
+- name: run ssh-keyscan to add keys to known_hosts for eth0
+  shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /root/.ssh/known_hosts"
+  with_items: "{{ groups['nodes'] }}"
+  become: yes
+  tags:
+    - admin
+    - site
+
+# this requires the precheck.yml to configure ceph_ip eth1 interfaces for ansible variable
+- name: run ssh-keyscan to add keys to known_hosts for eth1
+  shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /root/.ssh/known_hosts"
+  with_items: "{{ groups['nodes'] }}"
+  become: yes
+  tags:
+    - admin
+    - site

@@ -3,6 +3,9 @@
 [global]
 # Public Network for raven nodes is eth1 on 10..0/8
 public network = 10.0.0.0/24
+auth_cluster_required = cephx
+auth_service_required = cephx
+auth_client_required = cephx
 
 [rbd]
 rbd default features = 3

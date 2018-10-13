@@ -14,7 +14,7 @@
     - commander
     - database
     - driver
-    - client
+    - clients
     - deploy
     - admin
     - cmdr

@@ -7,17 +7,26 @@
     group: ceph-admin
     state: directory
     mode: 0775
+  tags:
+    - admin
+    - ceph
 
 - find:
     paths: /home/ceph-admin/ceph-dir/
     patterns: "*.*"
   register: files_to_delete
+  tags:
+    - admin
+    - ceph
 
 - name: Delete all files in ceph directory
   file:
     path: "{{ item.path }}"
     state: absent
   with_items: "{{ files_to_delete.files }}"
+  tags:
+    - admin
+    - ceph
 
 - name: Ceph Purge Nodes
   command: "ceph-deploy purge {{ hostvars[item]['ansible_hostname'] }}"
@@ -26,6 +35,9 @@
   with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 - name: Ceph Purge Data
   command: "ceph-deploy purgedata {{ hostvars[item]['ansible_hostname'] }}"
@@ -34,6 +46,9 @@
   with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 - name: Ceph Forget Keys
   command: "ceph-deploy forgetkeys"
@@ -41,6 +56,9 @@
     chdir: /home/ceph-admin/ceph-dir/
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 - name: Make configuration directory
   file:
@@ -49,6 +67,9 @@
     group: root
     state: directory
     mode: 0775
+  tags:
+    - admin
+    - ceph
 
 # We need to crete a configuration file for each ceph node
 # http://docs.ceph.com/docs/giant/rados/configuration/ceph-conf/
@@ -59,6 +80,10 @@
     owner: root
     group: root
     mode: 0644
+  tags:
+    - admin
+    - ceph
+    - common
 
 - name: Create Ceph Nodes
   command: "ceph-deploy new {{ hostvars[item]['ansible_hostname'] }}"
@@ -67,6 +92,9 @@
   with_items: "{{ groups['deploy'] }}"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 - name: Install Ceph Node Packages
   command: "ceph-deploy install {{ hostvars[item]['ansible_hostname'] }}"
@@ -75,6 +103,22 @@
   with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+- name: (fedora) Install Ceph Node Packages
+  command: "ceph-deploy install --no-adjust-repos {{ hostvars[item]['ansible_hostname'] }}"
+  args:
+    chdir: /home/ceph-admin/ceph-dir/
+  with_items: "{{ groups['nodes'] }}"
+  become: yes
+  become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Fedora"
 
 - name: Create Ceph Monitor
   command: "ceph-deploy mon create-initial"
@@ -82,6 +126,9 @@
     chdir: /home/ceph-admin/ceph-dir/
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 - name: Copy admin configuration/files to Nodes
   command: "ceph-deploy admin {{ hostvars[item]['ansible_hostname'] }}"
@@ -90,6 +137,9 @@
   with_items: "{{ groups['nodes'] }}"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 # btrfs also incorporates multi-device management into the file system, which
 # enables you to support heterogeneous disk storage infrastructure, data allocation
@@ -104,6 +154,9 @@
   with_items: "{{ groups['deploy'] }}"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 # we dont need a meta data server on every node.  These are used for cephfs
 - name: Create Metadata Server
@@ -115,6 +168,9 @@
     - "ceph2"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 # check quorum with `ceph quorum_status --format json-pretty` on cephX nodes
 # should be odd, min 3. As we have 4 nodes, we will settle with 3
@@ -128,6 +184,9 @@
     - "ceph2"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
 
 # Add Object Gateway, default web interface on 7480
 - name: Create a RGW
@@ -138,3 +197,6 @@
     - "ceph1"
   become: yes
   become_user: ceph-admin
+  tags:
+    - admin
+    - ceph
