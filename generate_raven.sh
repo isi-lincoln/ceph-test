@@ -72,6 +72,16 @@ echo "# auto generated file: raven" > raven
 echo "[deploy]" >> raven
 yamlFedora ${cephs[@]}
 
+# minimum 3 monitors
+echo "[monitors]" >> raven
+yamlFedora ${cephs[@]:0:3}
+
+echo "[mds]" >> raven
+mds=("${cephs[0]}")
+mds=("${mds[@]} ${cephs[-1]}")
+echo $mds
+yamlFedora $mds
+
 echo "[admin]" >> raven
 yamlFedora $server
 

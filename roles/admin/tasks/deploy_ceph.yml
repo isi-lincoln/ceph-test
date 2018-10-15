@@ -86,15 +86,15 @@
     - common
 
 - name: Create Ceph Nodes
-  command: "ceph-deploy new {{ hostvars[item]['ansible_hostname'] }}"
+  command: "ceph-deploy new {{ groups['monitors'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
     chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
   become: yes
   become_user: ceph-admin
   tags:
     - admin
     - ceph
+    - test
 
 - name: Install Ceph Node Packages
   command: "ceph-deploy install {{ hostvars[item]['ansible_hostname'] }}"
@@ -129,6 +129,7 @@
   tags:
     - admin
     - ceph
+    - keys
 
 - name: Copy admin configuration/files to Nodes
   command: "ceph-deploy admin {{ hostvars[item]['ansible_hostname'] }}"
@@ -140,6 +141,7 @@
   tags:
     - admin
     - ceph
+    - keys
 
 # btrfs also incorporates multi-device management into the file system, which
 # enables you to support heterogeneous disk storage infrastructure, data allocation

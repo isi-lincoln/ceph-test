@@ -1,11 +1,34 @@
 # Ceph Auto-generated template (git -> roles/common/templates)
+{% set mon_host = [] %}
+{% set mon_addr = [] %}
+{% for minion in groups['monitors'] %}
+{{ mon_host.append(hostvars[minion]['ansible_hostname']) }}
+{{ mon_addr.append(hostvars[minion]['ceph_ip']) }}
+{% endfor %}
 
 [global]
+# ceph cluster id
+fsid = 123456
 # Public Network for raven nodes is eth1 on 10..0/8
 public network = 10.0.0.0/24
+
 auth_cluster_required = cephx
 auth_service_required = cephx
 auth_client_required = cephx
 
+# monitor relate
+mon_initial_members = {{ mon_host | join(', ') }}
+mon_host = {{ mon_host | join(', ') }}
+mon_addr = {{ mon_addr | join(', ') }}
+
+
+{% for minion in groups['mds'] %}
+[mds.{{ hostvars[minion]['ansible_hostname'] }}]
+mds_standby_replay = true
+mds_standby_for_rank = 0
+host = {{ hostvars[minion]['ansible_hostname'] }}
+{% endfor %}
+
 [rbd]
+# We can remove this when not testing on virtual machines
 rbd default features = 3

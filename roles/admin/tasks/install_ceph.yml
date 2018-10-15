@@ -34,6 +34,22 @@
     - ceph
   when: ansible_distribution == "Fedora"
 
+- name: (fedora) Get latest ceph-deploy
+  command: "pip3 install ceph-deploy"
+  become: yes
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) create symbolic link to ceph-deploy
+  command: "sudo ln -sf /usr/local/bin/ceph-deploy /usr/bin/ceph-deploy"
+  become: yes
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Fedora"
+
 - name: Make sure we have a 'wheel' group
   group:
     name=wheel
@@ -187,23 +203,6 @@
 - name: run ssh-keyscan to add keys to known_hosts for eth1
   shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-admin/.ssh/known_hosts"
   with_items: "{{ groups['nodes'] }}"
-  tags:
-    - admin
-    - site
-
-- name: run ssh-keyscan to add keys to known_hosts for eth0
-  shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /root/.ssh/known_hosts"
-  with_items: "{{ groups['nodes'] }}"
-  become: yes
-  tags:
-    - admin
-    - site
-
-# this requires the precheck.yml to configure ceph_ip eth1 interfaces for ansible variable
-- name: run ssh-keyscan to add keys to known_hosts for eth1
-  shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /root/.ssh/known_hosts"
-  with_items: "{{ groups['nodes'] }}"
-  become: yes
   tags:
     - admin
     - site
