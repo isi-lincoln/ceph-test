@@ -128,3 +128,12 @@
     - deploy
     - site
   when: ansible_distribution == "Fedora"
+
+- name: (fedora) dmssetup volumes
+  command: "dmsetup remove_all"
+  become: yes
+  tags:
+    - deploy
+    - site
+    - disk
+  when: ansible_distribution == "Fedora"

@@ -79,8 +79,12 @@ yamlFedora ${cephs[@]:0:3}
 echo "[mds]" >> raven
 mds=("${cephs[0]}")
 mds=("${mds[@]} ${cephs[-1]}")
-echo $mds
 yamlFedora $mds
+
+echo "[rgw]" >> raven
+rgw=("${cephs[-1]}")
+rgw=("${rgw[@]} ${cephs[0]}")
+yamlFedora $rgw
 
 echo "[admin]" >> raven
 yamlFedora $server
@@ -106,6 +110,10 @@ echo "" >> raven
 echo "[nodes:children]" >> raven
 echo "clients" >> raven
 echo "deploy" >> raven
+echo "" >> raven
+
+echo "[deploy:vars]" >> raven
+echo "drives=\"['/dev/vdb', '/dev/vdc', '/dev/vdd', '/dev/vde', '/dev/vdf', '/dev/vdg', '/dev/vdh', '/dev/vdi']\"" >> raven
 echo "" >> raven
 
 echo "[all:vars]" >> raven
