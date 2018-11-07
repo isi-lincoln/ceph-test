@@ -6,7 +6,7 @@ cephTest = ["server", "client"]
 merge = ["driver", "commander", "database"]
 
 infra = {
-    //mergeNodes: Range(merge.length).map(i => Node(merge[i])),
+    mergeNodes: Range(merge.length).map(i => Node(merge[i])),
     cephNodes: Range(cephTest.length).map(i => Node(cephTest[i])),
 }
 
@@ -24,13 +24,13 @@ ports = {
 
 topo = {
   name: 'ceph-test',
-  nodes: [...cephs.node, ...infra.cephNodes],
+  nodes: [...cephs.node, ...infra.cephNodes, ...infra.mergeNodes],
   switches: [switch1],
   links: [
     ...cephs.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
     ...cephs.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
-    //...infra.mergeNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
-    //...infra.mergeNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
+    ...infra.mergeNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
+    ...infra.mergeNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
     ...infra.cephNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
     ...infra.cephNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
   ]
