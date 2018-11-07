@@ -9,34 +9,9 @@
   become_user: ceph-deploy
   register: clusterHealth
   until: clusterHealth is succeeded
-  failed_when: clusterHealth.stdout != "HEALTH_OK"
+  failed_when: (clusterHealth.stdout != "HEALTH_OK") and (clusterHealth.stdout != "HEALTH_WARN too few PGs per OSD (3 < min 30)")
   tags:
     - debug
-  retries: 1
-  delay: 10
-
-- name: attempt to restart ceph
-  command: "ssh {{ hostvars[item]['ansible_hostname'] }} sudo ceph health"
-  args:
-    chdir: /home/ceph-deploy/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
-  become: yes
-  become_user: ceph-deploy
-  when: clusterHealth is not succeeded
-  tags:
-    - debug
-
-- name: Test Cluster Health
-  command: "ssh {{ hostvars[item]['ansible_hostname'] }} sudo ceph health"
-  args:
-    chdir: /home/ceph-deploy/ceph-dir/
-  with_items: "{{ groups['deploy'] }}"
-  become: yes
-  become_user: ceph-deploy
-  register: clusterHealth
-  until: clusterHealth is succeeded
-  failed_when: clusterHealth.stdout != "HEALTH_OK"
-  tags:
-    - debug
+    - ceph-test
   retries: 3
   delay: 10
