@@ -17,12 +17,25 @@
     name: "{{ packages }}"
   vars:
     packages:
-      - ceph-fs-common
+      - ceph-common
       - ceph-fuse
   tags:
     - app
     - ceph
   when: ansible_distribution == "Fedora"
+
+# We need to crete a configuration file for each ceph node
+# http://docs.ceph.com/docs/giant/rados/configuration/ceph-conf/
+- name: copy ceph configuration
+  template:
+    src: roles/common/templates/ceph.j2
+    dest: /etc/ceph/ceph.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - app
+    - ceph
 
 - name: create pool list name
   set_fact:

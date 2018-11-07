@@ -159,6 +159,17 @@
     - ceph
     - keys
 
+- name: Copy admin configuration/files to Client
+  command: "ceph-deploy admin client"
+  args:
+    chdir: /home/ceph-deploy/ceph-dir/
+  become: yes
+  become_user: ceph-deploy
+  tags:
+    - admin
+    - ceph
+    - keys
+
 # btrfs also incorporates multi-device management into the file system, which
 # enables you to support heterogeneous disk storage infrastructure, data allocation
 # policies. The community also aims to provide fsck, deduplication, and data
