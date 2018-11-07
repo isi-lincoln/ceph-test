@@ -86,6 +86,24 @@
     - driver
     - site
 
+- name: stop driver
+  systemd:
+    state: stopped
+    enabled: False
+    name: josephine
+  ignore_errors: yes
+  tags:
+    - driver
+    - site
+
+- name: "kill driver"
+  shell: pkill josephine
+  ignore_errors: yes
+  become: yes
+  tags:
+    - agent
+    - site
+
 - name: copy protobuf to /usr/bin
   copy:
     src: /root/protoc/bin/protoc
@@ -175,51 +193,22 @@
     - driver
     - site
 
-- name: stop driver (Josephine) service
-  systemd:
-    state: started
-    enabled: False
-    name: josephine
-  ignore_errors: yes
-  tags:
-    - driver
-    - site
-
-- name: "kill driver"
-  shell: killall driver
-  ignore_errors: yes
-  become: yes
-  tags:
-    - driver
-    - site
-
-- name: "kill etcd instances"
-  shell: killall etcd
-  ignore_errors: yes
-  become: yes
-  tags:
-    - driver
-    - site
-
-- name: "kill golang instances"
-  shell: killall golang
-  ignore_errors: yes
-  become: yes
-  tags:
-    - driver
-    - site
-
-
 - name: Enable firewalld
   service:
     name: firewalld
     state: started
     enabled: yes
   when: ansible_distribution == "Fedora"
+  tags:
+    - driver
+    - site
 
 - name: Set dmz as default policy
   command: firewall-cmd --set-default-zone=public
   when: ansible_distribution == "Fedora"
+  tags:
+    - driver
+    - site
 
 - name: (fedora) add etcd firewalld rule
   firewalld:
@@ -346,7 +335,7 @@
 
 - name: make driver
   make:
-    chdir: /root/go/src/gitlab.com/dcomptb/agents/node
+    chdir: /root/go/src/gitlab.com/dcomptb/agents
     target: all
   become: yes
   environment:
@@ -359,7 +348,7 @@
 
 - name: move driver to /usr/bin
   copy:
-    src: /root/go/src/gitlab.com/dcomptb/agents/node/build/driver
+    src: /root/go/src/gitlab.com/dcomptb/agents/build/driver
     dest: /usr/bin/driver
     mode: 0755
     remote_src: yes

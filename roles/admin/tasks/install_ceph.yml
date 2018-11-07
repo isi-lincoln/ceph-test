@@ -1,55 +1,5 @@
 ---
 
-- name: Install ceph key
-  apt_key:
-    url: https://download.ceph.com/keys/release.asc
-    state: present
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Ubuntu"
-
-- name: Install ceph-deploy
-  apt:
-    state: latest
-  with_items:
-    - ceph-deploy
-    - ntp
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Ubuntu"
-
-- name: "dnf install packages"
-  dnf:
-    name: "{{ item }}"
-    state: latest
-  with_items:
-    - ceph-deploy
-    - ntp
-    - ntpdate
-    - ntp-doc
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Fedora"
-
-- name: (fedora) Get latest ceph-deploy
-  command: "pip3 install ceph-deploy"
-  become: yes
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Fedora"
-
-- name: (fedora) create symbolic link to ceph-deploy
-  command: "sudo ln -sf /usr/local/bin/ceph-deploy /usr/bin/ceph-deploy"
-  become: yes
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Fedora"
-
 - name: Make sure we have a 'wheel' group
   group:
     name=wheel
@@ -68,49 +18,38 @@
     - admin
     - ceph
 
-- name: Create ceph-admin user
+- name: Create ceph-deploy user
   user:
-    name: ceph-admin
+    name: ceph-deploy
     comment: Ceph Admin Worker
     create_home: yes
     groups: wheel
     append: yes
     generate_ssh_key: yes
-    ssh_key_bits: 1024
+    ssh_key_bits: 2048
     ssh_key_file: .ssh/id_rsa
     state: present
   tags:
     - admin
     - ceph
 
-- name: copying over private key to ceph-admin
+- name: copying over private key to ceph-deploy
   copy:
     src: roles/common/files/keys/ceph_admin
-    dest: /home/ceph-admin/.ssh/id_rsa
-    owner: ceph-admin
-    group: ceph-admin
+    dest: /home/ceph-deploy/.ssh/id_rsa
+    owner: ceph-deploy
+    group: ceph-deploy
     mode: 0600
   tags:
     - admin
     - ceph
 
-- name: copying over public key to ceph-admin
+- name: copying over public key to ceph-deploy
   copy:
     src: roles/common/files/keys/ceph_admin.pub
-    dest: /home/ceph-admin/.ssh/id_rsa.pub
-    owner: ceph-admin
-    group: ceph-admin
-    mode: 0644
-  tags:
-    - admin
-    - ceph
-
-- name: copy host file to admin server
-  template:
-    src: roles/admin/templates/hosts.j2
-    dest: /etc/hosts
-    owner: root
-    group: root
+    dest: /home/ceph-deploy/.ssh/id_rsa.pub
+    owner: ceph-deploy
+    group: ceph-deploy
     mode: 0644
   tags:
     - admin
@@ -119,9 +58,9 @@
 - name: copy ssh config file to admin server
   template:
     src: roles/admin/templates/config.j2
-    dest: /home/ceph-admin/.ssh/config
-    owner: ceph-admin
-    group: ceph-admin
+    dest: /home/ceph-deploy/.ssh/config
+    owner: ceph-deploy
+    group: ceph-deploy
     mode: 0644
   tags:
     - admin
@@ -149,60 +88,64 @@
     - ceph
   when: ansible_distribution == "Ubuntu"
 
-- name: Enable firewalld
-  service:
-    name: firewalld
-    state: started
-    enabled: yes
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Fedora"
+#- name: Enable firewalld
+#  service:
+#    name: firewalld
+#    state: started
+#    enabled: yes
+#  tags:
+#    - admin
+#    - ceph
+#  when: ansible_distribution == "Fedora"
 
-- name: Set dmz as default policy
-  command: firewall-cmd --set-default-zone=public
-  tags:
-    - admin
-    - ceph
-  when: ansible_distribution == "Fedora"
+#- name: Set dmz as default policy
+#  command: firewall-cmd --set-default-zone=public
+#  tags:
+#    - admin
+#    - ceph
+#  when: ansible_distribution == "Fedora"
 
-- name: (fedora) add etcd firewalld rule
-  firewalld:
-    zone: public
-    port: 6789/tcp
-    source: 10.0.0.0/24
-    permanent: true
-    immediate: true
-    state: enabled
-  become: yes
-  tags:
-    - admin
-    - site
-  when: ansible_distribution == "Fedora"
+#- name: (fedora) add etcd firewalld rule
+#  firewalld:
+#    zone: public
+#    port: 6789/tcp
+#    source: 10.0.0.0/24
+#    permanent: true
+#    immediate: true
+#    state: enabled
+#  become: yes
+#  tags:
+#    - admin
+#    - site
+#  when: ansible_distribution == "Fedora"
 
 - name: create & wipe contents of known_hosts file
   copy:
     content: ""
-    dest: /home/ceph-admin/.ssh/known_hosts
+    dest: /home/ceph-deploy/.ssh/known_hosts
     force: yes
-    owner: ceph-admin
-    group: ceph-admin
+    owner: ceph-deploy
+    group: ceph-deploy
     mode: 0644
   tags:
     - admin
     - site
+    - test
 
-- name: run ssh-keyscan to add keys to known_hosts for eth0
-  shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /home/ceph-admin/.ssh/known_hosts"
+- name: run ssh-keyscan to add keys to known_hosts for ceph hosts
+  shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /home/ceph-deploy/.ssh/known_hosts"
+  become: ceph-deploy
   with_items: "{{ groups['nodes'] }}"
   tags:
     - admin
     - site
+    - test
 
-# this requires the precheck.yml to configure ceph_ip eth1 interfaces for ansible variable
-- name: run ssh-keyscan to add keys to known_hosts for eth1
-  shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-admin/.ssh/known_hosts"
+- name: run ssh-keyscan to add keys to known_hosts for ceph ips
+  shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-deploy/.ssh/known_hosts"
+  become: ceph-deploy
   with_items: "{{ groups['nodes'] }}"
   tags:
     - admin
     - site
+    - test

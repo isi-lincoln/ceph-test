@@ -86,6 +86,11 @@ rgw=("${cephs[-1]}")
 rgw=("${rgw[@]} ${cephs[0]}")
 yamlFedora $rgw
 
+echo "[mgr]" >> raven
+mgr=("${cephs[1]}")
+mgr=("${mgr[@]} ${cephs[2]}")
+yamlFedora $mgr
+
 echo "[admin]" >> raven
 yamlFedora $server
 
@@ -109,6 +114,7 @@ echo "" >> raven
 
 echo "[nodes:children]" >> raven
 echo "clients" >> raven
+echo "admin" >> raven
 echo "deploy" >> raven
 echo "" >> raven
 

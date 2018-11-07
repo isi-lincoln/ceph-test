@@ -1,13 +1,13 @@
 {% for minion in groups['deploy'] %}
 Host {{ hostvars[minion]['ansible_hostname'] }}
   Hostname {{ hostvars[minion]['ansible_hostname'] }}
-  User ceph-client
+  User ceph-deploy
   IdentityFile ~/.ssh/id_rsa
 {% endfor %}
 
 {% for minion in groups['clients'] %}
 Host {{ hostvars[minion]['ansible_hostname'] }}
   Hostname {{ hostvars[minion]['ansible_hostname'] }}
-  User ceph-client
+  User ceph-deploy
   IdentityFile ~/.ssh/id_rsa
 {% endfor %}

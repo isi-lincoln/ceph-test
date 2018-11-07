@@ -1,2 +1,5 @@
+- name: copy host files to nodes
+  import_tasks: hosts.yml
+
 - name: update ubuntu hosts
-  import_tasks: update_ubuntu.yml
+  import_tasks: update_base_packages.yml

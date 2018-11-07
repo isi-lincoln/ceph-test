@@ -51,9 +51,9 @@
     - clients
     - ceph
 
-- name: Create ceph-client user
+- name: Create ceph-deploy user
   user:
-    name: ceph-client
+    name: ceph-deploy
     comment: Ceph Client
     create_home: yes
     groups: wheel
@@ -66,11 +66,11 @@
     - clients
     - ceph
 
-- name: copying over public key to ceph-client
+- name: copying over public key to ceph-deploy
   copy:
     src: roles/common/files/keys/ceph_admin.pub
-    dest: /home/ceph-client/.ssh/authorized_keys
-    owner: ceph-client
+    dest: /home/ceph-deploy/.ssh/authorized_keys
+    owner: ceph-deploy
     mode: 0644
   tags:
     - clients
@@ -98,36 +98,36 @@
     - ceph
   when: ansible_distribution == "Ubuntu"
 
-- name: Enable firewalld
-  service:
-    name: firewalld
-    state: started
-    enabled: yes
-  tags:
-    - clients
-    - ceph
-  when: ansible_distribution == "Fedora"
+#- name: Enable firewalld
+#  service:
+#    name: firewalld
+#    state: started
+#    enabled: yes
+#  tags:
+#    - clients
+#    - ceph
+#  when: ansible_distribution == "Fedora"
 
-- name: Set dmz as default policy
-  command: firewall-cmd --set-default-zone=public
-  tags:
-    - clients
-    - ceph
-  when: ansible_distribution == "Fedora"
+#- name: Set dmz as default policy
+#  command: firewall-cmd --set-default-zone=public
+#  tags:
+#    - clients
+#    - ceph
+#  when: ansible_distribution == "Fedora"
 
-- name: (fedora) add etcd firewalld rule
-  firewalld:
-    zone: public
-    port: 6789/tcp
-    source: 10.0.0.0/24
-    permanent: true
-    immediate: true
-    state: enabled
-  become: yes
-  tags:
-    - clients
-    - site
-  when: ansible_distribution == "Fedora"
+#- name: (fedora) add etcd firewalld rule
+#  firewalld:
+#    zone: public
+#    port: 6789/tcp
+#    source: 10.0.0.0/24
+#    permanent: true
+#    immediate: true
+#    state: enabled
+#  become: yes
+#  tags:
+#    - clients
+#    - site
+#  when: ansible_distribution == "Fedora"
 
 # in case we've mounted a disk
 - name: make sure we dont have any ceph mounting things

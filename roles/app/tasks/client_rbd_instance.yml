@@ -21,7 +21,7 @@
 - name: create a 4G Rados block image
   command: rbd create foo --size 4096 -k /etc/ceph/ceph.client.admin.keyring
   become: yes
-  become_user: ceph-client
+  become_user: ceph-deploy
 
 - name: modprobe kernel module
   modprobe:
@@ -31,7 +31,7 @@
 - name: create map for rados resource
   command: sudo rbd map foo --pool rbd --name client.admin -k /etc/ceph/ceph.client.admin.keyring
   become: yes
-  become_user: ceph-client
+  become_user: ceph-deploy
 
 - name: parition filesystem
   filesystem:
@@ -48,4 +48,4 @@
 - name: Mount rados block onto filesystem
   command: sudo mount /dev/rbd/rbd/foo /mnt/ceph-block-device
   become: yes
-  become_user: ceph-client
+  become_user: ceph-deploy

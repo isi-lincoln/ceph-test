@@ -1,38 +1,5 @@
 ---
 
-- name: Install ceph key
-  apt_key:
-    url: https://download.ceph.com/keys/release.asc
-    state: present
-  tags:
-    - deploy
-    - ceph
-  when: ansible_distribution == "Ubuntu"
-
-- name: Install ceph-deploy
-  apt:
-    name: "{{ item }}"
-    state: latest
-  with_items:
-    - "ceph-deploy"
-    - "ceph-common"
-  tags:
-    - deploy
-    - ceph
-  when: ansible_distribution == "Ubuntu"
-
-- name: "dnf install packages"
-  dnf:
-    name: "{{ item }}"
-    state: latest
-  with_items:
-    - "ceph-deploy"
-    - "ceph-common"
-  tags:
-    - deploy
-    - ceph
-  when: ansible_distribution == "Fedora"
-
 - name: Make sure we have a 'wheel' group
   group:
     name=wheel
@@ -51,10 +18,10 @@
     - deploy
     - ceph
 
-- name: Create ceph-client user
+- name: Create ceph-deploy user
   user:
-    name: ceph-client
-    comment: Ceph Client
+    name: ceph-deploy
+    comment: Ceph Deploy user
     create_home: yes
     groups: wheel
     append: yes
@@ -66,11 +33,11 @@
     - deploy
     - ceph
 
-- name: copying over public key to ceph-client
+- name: copying over public key to ceph-deploy
   copy:
     src: roles/common/files/keys/ceph_admin.pub
-    dest: /home/ceph-client/.ssh/authorized_keys
-    owner: ceph-client
+    dest: /home/ceph-deploy/.ssh/authorized_keys
+    owner: ceph-deploy
     mode: 0644
   tags:
     - deploy
@@ -98,42 +65,33 @@
     - ceph
   when: ansible_distribution == "Ubuntu"
 
-- name: Enable firewalld
-  service:
-    name: firewalld
-    state: started
-    enabled: yes
-  tags:
-    - deploy
-    - site
-  when: ansible_distribution == "Fedora"
+#- name: Enable firewalld
+#  service:
+#    name: firewalld
+#    state: started
+#    enabled: yes
+#  tags:
+#    - deploy
+#    - site
+#  when: ansible_distribution == "Fedora"
 
-- name: Set dmz as default policy
-  command: firewall-cmd --set-default-zone=public
-  tags:
-    - deploy
-    - site
-  when: ansible_distribution == "Fedora"
+#- name: Set dmz as default policy
+#  command: firewall-cmd --set-default-zone=public
+#  tags:
+#    - deploy
+#    - site
+#  when: ansible_distribution == "Fedora"
 
-- name: (fedora) add etcd firewalld rule
-  firewalld:
-    zone: public
-    port: 6789/tcp
-    source: 10.0.0.0/24
-    permanent: true
-    immediate: true
-    state: enabled
-  become: yes
-  tags:
-    - deploy
-    - site
-  when: ansible_distribution == "Fedora"
-
-- name: (fedora) dmssetup volumes
-  command: "dmsetup remove_all"
-  become: yes
-  tags:
-    - deploy
-    - site
-    - disk
-  when: ansible_distribution == "Fedora"
+#- name: (fedora) add etcd firewalld rule
+#  firewalld:
+#    zone: public
+#    port: 6789/tcp
+#    source: 10.0.0.0/24
+#    permanent: true
+#    immediate: true
+#    state: enabled
+#  become: yes
+#  tags:
+#    - deploy
+#    - site
+#  when: ansible_distribution == "Fedora"

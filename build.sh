@@ -22,7 +22,7 @@ else
 	exit 1
 fi
 echo "Pinging nodes until topology is ready."
-if rvn pingwait client server commander driver ceph0 ceph1 ceph2 ceph3 switch1; then
+if rvn pingwait client server ceph0 ceph1 ceph2 ceph3 switch1; then # commander driver database
 	echo "Raven Topology UP"
 else
 	exit 1

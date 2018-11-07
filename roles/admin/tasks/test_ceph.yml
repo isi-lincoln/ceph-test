@@ -3,14 +3,40 @@
 - name: Test Cluster Health
   command: "ssh {{ hostvars[item]['ansible_hostname'] }} sudo ceph health"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
+    chdir: /home/ceph-deploy/ceph-dir/
   with_items: "{{ groups['deploy'] }}"
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   register: clusterHealth
   until: clusterHealth is succeeded
   failed_when: clusterHealth.stdout != "HEALTH_OK"
   tags:
     - debug
-  retries: 6
+  retries: 1
+  delay: 10
+
+- name: attempt to restart ceph
+  command: "ssh {{ hostvars[item]['ansible_hostname'] }} sudo ceph health"
+  args:
+    chdir: /home/ceph-deploy/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-deploy
+  when: clusterHealth is not succeeded
+  tags:
+    - debug
+
+- name: Test Cluster Health
+  command: "ssh {{ hostvars[item]['ansible_hostname'] }} sudo ceph health"
+  args:
+    chdir: /home/ceph-deploy/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
+  become: yes
+  become_user: ceph-deploy
+  register: clusterHealth
+  until: clusterHealth is succeeded
+  failed_when: clusterHealth.stdout != "HEALTH_OK"
+  tags:
+    - debug
+  retries: 3
   delay: 10

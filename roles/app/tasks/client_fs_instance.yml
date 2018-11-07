@@ -35,9 +35,9 @@
 
 # placement group calculation: http://docs.ceph.com/docs/jewel/rados/operations/placement-groups/#preselection
 - name: create pools for filesystem
-  command: "ceph osd pool create {{ item }} 128 replicated"
+  command: "ceph osd pool create {{ item }} 1024 replicated"
   with_items: "{{ ceph_fs_pools }}"
-  become_user: ceph-client
+  become_user: ceph-deploy
   tags:
     - app
     - ceph
@@ -46,7 +46,7 @@
   command: "ceph fs new test_filesystem {{ item }}"
   with_items:
     - "{{ ceph_fs_pools | join(' ') }}"
-  become_user: ceph-client
+  become_user: ceph-deploy
   tags:
     - app
     - ceph
@@ -97,7 +97,7 @@
 
 - name: create filesystem using pools
   command: "sudo mount -t ceph {{ get_mons.stdout_lines[0] }}:/ /mnt/cephfs -o name=admin,secretfile=/etc/ceph/secret"
-  become_user: ceph-client
+  become_user: ceph-deploy
   become: yes
   tags:
     - app

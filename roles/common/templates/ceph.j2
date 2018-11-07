@@ -8,9 +8,11 @@
 
 [global]
 # ceph cluster id
-fsid = 123456
+fsid = 607fea84-7182-4f06-b3cf-e8d8c6d9109b
 # Public Network for raven nodes is eth1 on 10..0/8
 public network = 10.0.0.0/24
+
+log file = /var/log/ceph/cluster.log
 
 auth_cluster_required = cephx
 auth_service_required = cephx
@@ -21,13 +23,18 @@ mon_initial_members = {{ mon_host | join(', ') }}
 mon_host = {{ mon_host | join(', ') }}
 mon_addr = {{ mon_addr | join(', ') }}
 
-
 {% for minion in groups['mds'] %}
 [mds.{{ hostvars[minion]['ansible_hostname'] }}]
 mds_standby_replay = true
 mds_standby_for_rank = 0
 host = {{ hostvars[minion]['ansible_hostname'] }}
 {% endfor %}
+
+osd pool default size = 4
+# pg num = OSD*100/pool size = 32*100 / 4 = 800 nearest power of 2 = 1024
+# http://docs.ceph.com/docs/mimic/rados/operations/placement-groups/
+osd pool default pg num = 1024
+osd pool default pgp num = 1024
 
 [rbd]
 # We can remove this when not testing on virtual machines

@@ -1,2 +1,10 @@
 - name: install ceph packages
+  import_tasks: install_packages_fedora.yml
+  when: ansible_distribution == "Fedora"
+
+- name: install ceph packages
+  import_tasks: install_packages_ubuntu.yml
+  when: ansible_distribution == "Ubuntu"
+
+- name: install ceph packages
   import_tasks: install_ceph.yml

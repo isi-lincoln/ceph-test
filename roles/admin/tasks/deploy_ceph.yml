@@ -2,9 +2,9 @@
 
 - name: Make ceph directory
   file:
-    path: /home/ceph-admin/ceph-dir/
-    owner: ceph-admin
-    group: ceph-admin
+    path: /home/ceph-deploy/ceph-dir/
+    owner: ceph-deploy
+    group: ceph-deploy
     state: directory
     mode: 0775
   tags:
@@ -12,7 +12,7 @@
     - ceph
 
 - find:
-    paths: /home/ceph-admin/ceph-dir/
+    paths: /home/ceph-deploy/ceph-dir/
     patterns: "*.*"
   register: files_to_delete
   tags:
@@ -31,10 +31,11 @@
 - name: Ceph Purge Nodes
   command: "ceph-deploy purge {{ hostvars[item]['ansible_hostname'] }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['nodes'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
+  ignore_errors: yes
   tags:
     - admin
     - ceph
@@ -42,10 +43,10 @@
 - name: Ceph Purge Data
   command: "ceph-deploy purgedata {{ hostvars[item]['ansible_hostname'] }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['nodes'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
@@ -53,9 +54,9 @@
 - name: Ceph Forget Keys
   command: "ceph-deploy forgetkeys"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
+   chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
@@ -90,7 +91,7 @@
 - name: copy ceph configuration (to local)
   template:
     src: roles/common/templates/ceph.j2
-    dest: /home/ceph-admin/ceph-dir/ceph.conf
+    dest: /home/ceph-deploy/ceph-dir/ceph.conf
     owner: root
     group: root
     mode: 0644
@@ -102,32 +103,30 @@
 - name: Create Ceph Nodes
   command: "ceph-deploy new {{ groups['monitors'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
 
 - name: Install Ceph Node Packages
-  command: "ceph-deploy install {{ hostvars[item]['ansible_hostname'] }}"
+  command: "ceph-deploy install --release mimic {{ groups['deploy'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['nodes'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
   when: ansible_distribution == "Ubuntu"
 
 - name: (fedora) Install Ceph Node Packages
-  command: "ceph-deploy install --no-adjust-repos {{ hostvars[item]['ansible_hostname'] }}"
+  command: "ceph-deploy install --no-adjust-repos {{ groups['deploy'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['nodes'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
@@ -136,9 +135,9 @@
 - name: Create Ceph Monitor
   command: "ceph-deploy mon create-initial"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
@@ -147,10 +146,10 @@
 - name: Copy admin configuration/files to Nodes
   command: "ceph-deploy admin {{ hostvars[item]['ansible_hostname'] }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['nodes'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
+  with_items: "{{ groups['deploy'] }}"
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
@@ -165,57 +164,51 @@
 - name: Create OSDs - this will take a while...
   command: "ceph-deploy osd create --zap-disk --fs-type xfs {{ hostvars[item[0]]['ansible_hostname'] }}:{{ item[1] }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
+    chdir: /home/ceph-deploy/ceph-dir/
   with_nested:
     - "{{ groups['deploy'] }}"
     - "{{ hostvars[groups['deploy'][0]]['drives'] }}"
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
   when: ansible_distribution == "Ubuntu"
 
 # sudo dmsetup remove_all on ceph nodes if this errors
-- name: (fedora) Zap OSDs
-  command: "ceph-deploy disk zap {{ hostvars[item[0]]['ansible_hostname'] }} {{ item[1] }}"
+- name: (fedora) create osds
+  command: "ceph-deploy osd create --data {{ item[1] }} {{ hostvars[item[0]]['ansible_hostname'] }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
+    chdir: /home/ceph-deploy/ceph-dir/
   with_nested:
     - "{{ groups['deploy'] }}"
     - "{{ hostvars[groups['deploy'][0]]['drives'] }}"
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
     - disk
   when: ansible_distribution == "Fedora"
 
-- name: (fedora) Create OSDs - this will take a while...
-  command: "ceph-deploy osd create --data {{ item[0] }} --zap-disk --fs-type xfs {{ hostvars[item[1]]['ansible_hostname'] }}"
+- name: Create ceph mgr
+  command: "ceph-deploy mgr create {{ groups['mgr'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_nested:
-    - "{{ hostvars[groups['deploy'][0]]['drives'] }}"
-    - "{{ groups['deploy'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
     - disk
-    - test
-  when: ansible_distribution == "Fedora"
 
 # we dont need a meta data server on every node.  These are used for cephfs
 - name: Create Metadata Server
-  command: "ceph-deploy mds create {{ hostvars[item]['ansible_hostname'] }}"
+  command: "ceph-deploy mds create {{ groups['mds'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['mds'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph
@@ -223,12 +216,11 @@
 
 # Add Object Gateway, default web interface on 7480
 - name: Create a RGW
-  command: "ceph-deploy rgw create {{ hostvars[item]['ansible_hostname'] }}"
+  command: "ceph-deploy rgw create {{ groups['rgw'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
   args:
-    chdir: /home/ceph-admin/ceph-dir/
-  with_items: "{{ groups['rgw'] }}"
+    chdir: /home/ceph-deploy/ceph-dir/
   become: yes
-  become_user: ceph-admin
+  become_user: ceph-deploy
   tags:
     - admin
     - ceph

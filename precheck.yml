@@ -14,10 +14,14 @@
     - commander
     - database
     - driver
+    - debug
     - clients
     - deploy
+    - ceph
     - admin
     - cmdr
     - test
     - common
     - disk
+    - packages
+    - hosts

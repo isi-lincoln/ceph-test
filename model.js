@@ -2,10 +2,12 @@ cephs = {
     node: Range(4).map(i => Ceph('ceph'+i))
 }
 
-names = ["server", "client", "driver", "commander", "database"]
+cephTest = ["server", "client"]
+merge = ["driver", "commander", "database"]
 
 infra = {
-    node: Range(names.length).map(i => Node(names[i]))
+    //mergeNodes: Range(merge.length).map(i => Node(merge[i])),
+    cephNodes: Range(cephTest.length).map(i => Node(cephTest[i])),
 }
 
 switch1 = {
@@ -22,13 +24,15 @@ ports = {
 
 topo = {
   name: 'ceph-test',
-  nodes: [...cephs.node, ...infra.node],
+  nodes: [...cephs.node, ...infra.cephNodes],
   switches: [switch1],
   links: [
     ...cephs.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
     ...cephs.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
-    ...infra.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
-    ...infra.node.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
+    //...infra.mergeNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
+    //...infra.mergeNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
+    ...infra.cephNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
+    ...infra.cephNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
   ]
 }
 
