@@ -193,36 +193,36 @@
     - driver
     - site
 
-- name: Enable firewalld
-  service:
-    name: firewalld
-    state: started
-    enabled: yes
-  when: ansible_distribution == "Fedora"
-  tags:
-    - driver
-    - site
+#- name: Enable firewalld
+#  service:
+#    name: firewalld
+#    state: started
+#    enabled: yes
+#  when: ansible_distribution == "Fedora"
+#  tags:
+#    - driver
+#    - site
 
-- name: Set dmz as default policy
-  command: firewall-cmd --set-default-zone=public
-  when: ansible_distribution == "Fedora"
-  tags:
-    - driver
-    - site
+#- name: Set dmz as default policy
+#  command: firewall-cmd --set-default-zone=public
+#  when: ansible_distribution == "Fedora"
+#  tags:
+#    - driver
+#    - site
 
-- name: (fedora) add etcd firewalld rule
-  firewalld:
-    zone: public
-    port: 2379-2380/tcp
-    source: 10.0.0.0/24
-    permanent: true
-    immediate: true
-    state: enabled
-  become: yes
-  tags:
-    - database
-    - site
-  when: ansible_distribution == "Fedora"
+#- name: (fedora) add etcd firewalld rule
+#  firewalld:
+#    zone: public
+#    port: 2379-2380/tcp
+#    source: 10.0.0.0/24
+#    permanent: true
+#    immediate: true
+#    state: enabled
+#  become: yes
+#  tags:
+#    - database
+#    - site
+# when: ansible_distribution == "Fedora"
 
 - name: flush iptable rules
   iptables:
