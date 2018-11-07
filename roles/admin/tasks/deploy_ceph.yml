@@ -10,6 +10,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - find:
     paths: /home/ceph-deploy/ceph-dir/
@@ -18,6 +19,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: Delete all files in ceph directory
   file:
@@ -27,6 +29,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: Ceph Purge Nodes
   command: "ceph-deploy purge {{ hostvars[item]['ansible_hostname'] }}"
@@ -71,6 +74,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 # We need to crete a configuration file for each ceph node
 # http://docs.ceph.com/docs/giant/rados/configuration/ceph-conf/
@@ -84,7 +88,7 @@
   tags:
     - admin
     - ceph
-    - common
+    - install
 
 # We need to crete a configuration file for each ceph node
 # http://docs.ceph.com/docs/giant/rados/configuration/ceph-conf/
@@ -98,17 +102,17 @@
   tags:
     - admin
     - ceph
-    - common
+    - install
 
-- name: Create Ceph Nodes
-  command: "ceph-deploy new {{ groups['monitors'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
-  args:
-    chdir: /home/ceph-deploy/ceph-dir/
-  become: yes
-  become_user: ceph-deploy
-  tags:
-    - admin
-    - ceph
+#- name: Create Ceph Nodes
+#  command: "ceph-deploy new {{ groups['monitors'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"
+#  args:
+#    chdir: /home/ceph-deploy/ceph-dir/
+#  become: yes
+#  become_user: ceph-deploy
+#  tags:
+#    - admin
+#    - ceph
 
 - name: Install Ceph Node Packages
   command: "ceph-deploy install --release mimic {{ groups['deploy'] | map('extract', hostvars, 'ansible_hostname') | join(' ') }}"

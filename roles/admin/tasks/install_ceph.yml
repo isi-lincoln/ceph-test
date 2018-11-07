@@ -7,6 +7,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: Allow wheel group to have passwordless sudo
   lineinfile:
@@ -17,6 +18,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: Create ceph-deploy user
   user:
@@ -32,6 +34,7 @@
   tags:
     - admin
     - ceph
+    - install 
 
 - name: copying over private key to ceph-deploy
   copy:
@@ -43,6 +46,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: copying over public key to ceph-deploy
   copy:
@@ -54,6 +58,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: copy ssh config file to admin server
   template:
@@ -65,6 +70,7 @@
   tags:
     - admin
     - ceph
+    - install
 
 - name: flush iptable rules
   iptables:
@@ -131,6 +137,7 @@
     - admin
     - site
     - test
+    - install
 
 - name: run ssh-keyscan to add keys to known_hosts for ceph hosts
   shell: "ssh-keyscan -H {{ hostvars[item]['ansible_hostname'] }} >> /home/ceph-deploy/.ssh/known_hosts"
@@ -140,6 +147,7 @@
     - admin
     - site
     - test
+    - install
 
 - name: run ssh-keyscan to add keys to known_hosts for ceph ips
   shell: "ssh-keyscan -H {{ hostvars[item]['ceph_ip'] }} >> /home/ceph-deploy/.ssh/known_hosts"
@@ -149,3 +157,4 @@
     - admin
     - site
     - test
+    - install
