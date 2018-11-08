@@ -1,0 +1,81 @@
+---
+
+- name: (fedora) Install ceph key
+  rpm_key:
+    key: https://download.ceph.com/keys/release.asc
+    state: present
+  tags:
+    - admin
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
+
+- name: (ubuntu) Install ceph key
+  apt_key:
+    url: https://download.ceph.com/keys/release.asc
+    state: present
+  tags:
+    - admin
+    - ceph
+    - packages
+  when: ansible_distribution == "Ubuntu"
+
+- name: copying ceph to repo
+  copy:
+    src: roles/admin/files/ceph.repo
+    dest: /etc/yum.repos.d/ceph.repo
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - admin
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
+
+- name: Install ceph-deploy
+  apt:
+    state: latest
+  with_items:
+    - ceph-deploy
+    - ntp
+    - packages
+  tags:
+    - admin
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+- name: "dnf install packages"
+  dnf:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - ntp
+    - ntpdate
+    - ntp-doc
+    - python3
+    - python3-pip
+    - yum-plugin-priorities
+  tags:
+    - admin
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) Get latest ceph-deploy
+  command: "pip3 install ceph-deploy"
+  become: yes
+  tags:
+    - admin
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) create symbolic link to ceph-deploy
+  command: "sudo ln -sf /usr/local/bin/ceph-deploy /usr/bin/ceph-deploy"
+  become: yes
+  tags:
+    - admin
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"

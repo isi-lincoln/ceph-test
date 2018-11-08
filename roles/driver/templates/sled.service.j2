@@ -1,0 +1,13 @@
+[Unit]
+Description=Mergetb sled agent service
+
+[Service]
+Environment=NODE_HOST={{ hostvars[groups['driver'][0]]['ceph_ip'] }}
+Environment=CMDR_HOST={{ hostvars[groups['commander'][0]]['ceph_ip'] }}
+Environment=DB_HOST={{ hostvars[groups['database'][0]]['ceph_ip'] }}
+ExecStart=/usr/bin/sled
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=default.target

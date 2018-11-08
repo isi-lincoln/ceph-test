@@ -1,0 +1,6 @@
+# merge system configuration
+---
+
+transient_ds:
+  host: database
+  port: 2379

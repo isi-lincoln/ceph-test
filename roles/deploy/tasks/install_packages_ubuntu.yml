@@ -1,0 +1,26 @@
+---
+
+- name: (ubuntu) Install ceph key
+  apt_key:
+    url: https://download.ceph.com/keys/release.asc
+    state: present
+  tags:
+    - deploy
+    - ceph
+    - packages
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install ceph-deploy
+  apt:
+    state: latest
+  with_items:
+    - ceph-common
+    - ceph-deploy
+    - ntp
+    - packages
+  tags:
+    - deploy
+    - ceph
+  when: ansible_distribution == "Ubuntu"
+
+

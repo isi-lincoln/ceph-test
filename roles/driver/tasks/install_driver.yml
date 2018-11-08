@@ -1,31 +1,5 @@
 ---
 
-- name: "apt-get update"
-  apt:
-    update_cache: yes
-  tags:
-    - driver
-    - site
-  when: ansible_distribution == "Ubuntu"
-
-- name: "apt-get upgrade"
-  apt:
-    name: "{{ item }}"
-    state: latest
-  with_items:
-    - etcd
-    - git
-    - libprotoc-dev
-    - make
-    - gcc
-    - librados-dev # librados2-devel
-    - librbd-dev
-    - libcephfs-dev
-  tags:
-    - driver
-    - site
-  when: ansible_distribution == "Ubuntu"
-
 - name: "dnf install packages"
   dnf:
     name: "{{ item }}"
@@ -40,8 +14,10 @@
     - libcephfs-devel
     - unzip
     - zip
+    - protobuf
+    - protobuf-compiler
   tags:
-    - driver
+    - agent
     - site
   when: ansible_distribution == "Fedora"
 
@@ -51,7 +27,7 @@
     state: absent
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: get protobuf3
@@ -61,7 +37,7 @@
     checksum: sha256:6003de742ea3fcf703cfec1cd4a3380fd143081a2eb0e559065563496af27807
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: create protoc stuff
@@ -73,7 +49,7 @@
     mode: 0775
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: Extract protobuf
@@ -83,21 +59,57 @@
     remote_src: yes
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
-- name: stop driver
+- name: stop driver (Josephine) service
   systemd:
     state: stopped
     enabled: False
     name: josephine
   ignore_errors: yes
   tags:
-    - driver
+    - agent
+    - site
+
+- name: stop sled agent
+  systemd:
+    state: stopped
+    enabled: False
+    name: sled
+  ignore_errors: yes
+  tags:
+    - agent
+    - site
+
+- name: stop etcd
+  systemd:
+    state: stopped
+    enabled: False
+    name: etcd
+  ignore_errors: yes
+  tags:
+    - agent
     - site
 
 - name: "kill driver"
-  shell: pkill josephine
+  shell: pkill driver
+  ignore_errors: yes
+  become: yes
+  tags:
+    - agent
+    - site
+
+- name: "kill sled"
+  shell: pkill sled
+  ignore_errors: yes
+  become: yes
+  tags:
+    - agent
+    - site
+
+- name: "kill golang instances"
+  shell: pkill golang
   ignore_errors: yes
   become: yes
   tags:
@@ -112,7 +124,7 @@
     remote_src: yes
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 # ansible sucks sometimes.
@@ -120,7 +132,7 @@
   command: sudo cp -r /root/protoc/include/ /usr/local/include/
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: delete all go stuff
@@ -129,7 +141,7 @@
     state: absent
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: delete all gosrc stuff
@@ -138,7 +150,7 @@
     state: absent
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: delete all go.gz stuff
@@ -147,7 +159,7 @@
     state: absent
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: get golang 1.11.1
@@ -157,7 +169,7 @@
     checksum: sha256:2871270d8ff0c8c69f161aaae42f9f28739855ff5c5204752a8d92a1c9f63993
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: create gosrc stuff
@@ -169,7 +181,7 @@
     mode: 0775
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: Extract golang
@@ -179,7 +191,7 @@
     remote_src: yes
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: copy go to /usr/bin
@@ -190,63 +202,10 @@
     remote_src: yes
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
-#- name: Enable firewalld
-#  service:
-#    name: firewalld
-#    state: started
-#    enabled: yes
-#  when: ansible_distribution == "Fedora"
-#  tags:
-#    - driver
-#    - site
-
-#- name: Set dmz as default policy
-#  command: firewall-cmd --set-default-zone=public
-#  when: ansible_distribution == "Fedora"
-#  tags:
-#    - driver
-#    - site
-
-#- name: (fedora) add etcd firewalld rule
-#  firewalld:
-#    zone: public
-#    port: 2379-2380/tcp
-#    source: 10.0.0.0/24
-#    permanent: true
-#    immediate: true
-#    state: enabled
-#  become: yes
-#  tags:
-#    - database
-#    - site
-# when: ansible_distribution == "Fedora"
-
-- name: flush iptable rules
-  iptables:
-    flush: yes
-  tags:
-    - driver
-    - site
-  when: ansible_distribution == "Ubuntu"
-
-- name: add etcd iptable rule
-  iptables:
-    chain: INPUT
-    in_interface: eth1
-    protocol: tcp
-    source: 10.0.0.0/24
-    destination_port: 2379:2380
-    jump: ACCEPT
-  become: yes
-  tags:
-    - driver
-    - site
-  when: ansible_distribution == "Ubuntu"
-
-- name: copy host file to driver
+- name: copy host file to agent
   template:
     src: roles/driver/templates/hosts.j2
     dest: /etc/hosts
@@ -255,7 +214,7 @@
     mode: 0644
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: create go stuff
@@ -267,10 +226,10 @@
     mode: 0775
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
-- name: get latest driver code
+- name: get latest agent code
   git:
     repo: 'https://gitlab.com/dcomptb/agents.git'
     dest: /root/go/src/gitlab.com/dcomptb/agents
@@ -278,7 +237,7 @@
     update: yes
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: get go-protobuf
@@ -289,7 +248,7 @@
     GOROOT: /root/gosrc/go
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: get go-protobuf
@@ -300,7 +259,7 @@
     GOROOT: /root/gosrc/go
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: get dep
@@ -310,7 +269,7 @@
     GOROOT: /root/gosrc/go
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: dep ensure
@@ -323,14 +282,14 @@
     GOBIN: /root/go/bin
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: set path variable
   set_fact:
     path_var:  "{{ lookup('env','PATH') }}"
   tags:
-    - driver
+    - agent
     - site
 
 - name: make driver
@@ -343,7 +302,7 @@
     GOROOT: /root/gosrc/go
     PATH: "{{ path_var }}:/root/go/bin"
   tags:
-    - driver
+    - agent
     - site
 
 - name: move driver to /usr/bin
@@ -354,10 +313,32 @@
     remote_src: yes
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
-- name: copy systemd file to driver
+- name: create merge directory
+  file:
+    path: /etc/merge
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - agent
+    - site
+
+- name: copying over merge db config file
+  copy:
+    src: roles/driver/files/merge.yml
+    dest: /etc/merge/merge.yml
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - agent
+    - site
+
+- name: copy systemd file to agent
   template:
     src: roles/driver/templates/josephine.service.j2
     dest: /etc/systemd/system/josephine.service
@@ -365,7 +346,7 @@
     group: root
   become: yes
   tags:
-    - driver
+    - agent
     - site
 
 - name: start driver (josephine) service
@@ -374,7 +355,7 @@
     enabled: True
     name: josephine
   tags:
-    - driver
+    - agent
     - site
 
 - name: restart driver (josephine) to pick up daemon changes
@@ -383,5 +364,57 @@
     daemon_reload: yes
     name: josephine
   tags:
-    - driver
+    - agent
+    - site
+
+- name: move sled agent to /usr/bin
+  copy:
+    src: /root/go/src/gitlab.com/dcomptb/agents/build/sled
+    dest: /usr/bin/sled
+    mode: 0755
+    remote_src: yes
+  become: yes
+  tags:
+    - agent
+    - site
+
+- name: copy systemd file to sled
+  template:
+    src: roles/driver/templates/sled.service.j2
+    dest: /etc/systemd/system/sled.service
+    owner: root
+    group: root
+  become: yes
+  tags:
+    - agent
+    - site
+
+- name: start sled service
+  systemd:
+    state: started
+    enabled: True
+    name: sled
+  tags:
+    - agent
+    - site
+
+- name: restart sled to pick up daemon changes
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: sled
+  tags:
+    - agent
+    - site
+
+- name: copy test script to agent
+  copy:
+    src: roles/driver/files/test.sh
+    dest: /root/test.sh
+    owner: root
+    group: root
+    mode: 0755
+  become: yes
+  tags:
+    - agent
     - site

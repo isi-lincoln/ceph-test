@@ -1,0 +1,36 @@
+---
+
+- name: "dnf install packages"
+  dnf:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - ntp
+    - ntpdate
+    - ntp-doc
+    - python3
+    - python3-pip
+    - yum-plugin-priorities
+  tags:
+    - deploy
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) Get latest ceph-deploy
+  command: "pip3 install ceph-deploy"
+  become: yes
+  tags:
+    - deploy
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
+
+- name: (fedora) create symbolic link to ceph-deploy
+  command: "sudo ln -sf /usr/local/bin/ceph-deploy /usr/bin/ceph-deploy"
+  become: yes
+  tags:
+    - deploy
+    - ceph
+    - packages
+  when: ansible_distribution == "Fedora"
