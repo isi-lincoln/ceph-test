@@ -2,11 +2,13 @@ cephs = {
     node: Range(4).map(i => Ceph('ceph'+i))
 }
 
-cephTest = ["server", "client"]
+cephTestMount = ["client"]
+cephTest = ["server"]
 merge = ["driver", "commander", "database"]
 
 infra = {
     mergeNodes: Range(merge.length).map(i => Node(merge[i])),
+    cephMNodes: Range(cephTest.length).map(i => NodeMount(cephTestMount[i])),
     cephNodes: Range(cephTest.length).map(i => Node(cephTest[i])),
 }
 
@@ -24,7 +26,7 @@ ports = {
 
 topo = {
   name: 'ceph-test',
-  nodes: [...cephs.node, ...infra.cephNodes, ...infra.mergeNodes],
+  nodes: [...cephs.node, ...infra.cephNodes,  ...infra.cephMNodes, ...infra.mergeNodes],
   switches: [switch1],
   links: [
     ...cephs.node.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
@@ -33,6 +35,8 @@ topo = {
     ...infra.mergeNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
     ...infra.cephNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
     ...infra.cephNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
+    ...infra.cephMNodes.map(x => Link(x.name, 0, 'switch1', ports.switch1++)),
+    ...infra.cephMNodes.map(x => Link(x.name, 1, 'switch1', ports.switch1++)),
   ]
 }
 
@@ -66,5 +70,19 @@ function Node(nameIn) {
       image: 'fedora-28',
       cpu: { cores: 2 },
       memory: { capacity: GB(4) },
+    };
+}
+
+
+function NodeMount(nameIn) {
+    return ceph = {
+      name: nameIn,
+      image: 'fedora-28',
+      cpu: { cores: 2 },
+      memory: { capacity: GB(4) },
+      mounts: [
+        // where code resides
+        { source: '/home/lthurlow/go/src/gitlab.com/dcomptb/agents', point: '/home/rvn/code' },
+      ]
     };
 }
