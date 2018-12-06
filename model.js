@@ -82,7 +82,7 @@ function NodeMount(nameIn) {
       memory: { capacity: GB(4) },
       mounts: [
         // where code resides
-        { source: '/home/lthurlow/go/src/gitlab.com/dcomptb/agents', point: '/home/rvn/code' },
+        { source: '/home/lthurlow/go/src/gitlab.com/dcomptb/cogs', point: '/home/rvn/code' },
       ]
     };
 }

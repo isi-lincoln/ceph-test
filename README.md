@@ -5,6 +5,7 @@ Built for a standalone environment to test building a ceph deployment using [rav
 ## Building
 
 `./build.sh`
+`ansible-playbook -i raven ceph.yml`
 
 ### Expanding
 
